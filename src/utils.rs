@@ -55,11 +55,6 @@ pub async fn send_request(body: HttpRequest) -> Result<()> {
 // https://docs.rs/teloxide/0.5.3/src/teloxide/utils/markdown.rs.html#91-110
 pub fn escape(s: &str) -> String {
     s.replace("_", r"\_")
-        .replace("*", r"\*")
-        .replace("[", r"\[")
-        .replace("]", r"\]")
-        .replace("(", r"\(")
-        .replace(")", r"\)")
         .replace("~", r"\~")
         .replace("`", r"\`")
         .replace(">", r"\>")
