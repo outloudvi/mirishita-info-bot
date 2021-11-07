@@ -22,3 +22,5 @@ lazy_static! {
         m
     };
 }
+
+pub const BOT_TOKEN: &str = "UID:TOKEN";

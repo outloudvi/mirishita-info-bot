@@ -4,6 +4,8 @@ use worker::wasm_bindgen::JsValue;
 use worker::Request as WRequest;
 use worker::*;
 
+use crate::constants::BOT_TOKEN;
+
 cfg_if! {
     // https://github.com/rustwasm/console_error_panic_hook#readme
     if #[cfg(feature = "console_error_panic_hook")] {
@@ -14,8 +16,6 @@ cfg_if! {
         pub fn set_panic_hook() {}
     }
 }
-
-const BOT_TOKEN: &str = "2107975294:AAG6ycfnXr34JZSKxwUm3lLWQ7oJDYdocQU";
 
 pub fn to_workers_request(one: HttpRequest) -> Result<WRequest> {
     match one.body {
