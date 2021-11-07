@@ -1,0 +1,34 @@
+[package]
+authors = ["Outvi V <oss+rust@outv.im>"]
+edition = "2021"
+name = "mirishita_info_bot"
+version = "0.1.0"
+
+[dependencies]
+cfg-if = "0.1.2"
+serde_json = "1.0.69"
+telegram-bot-raw = "0.8.0"
+worker = "0.0.7"
+# The `console_error_panic_hook` crate provides better debugging of panics by
+# logging them with `console.error`. This is great for development, but requires
+# all the `std::fmt` and `std::panicking` infrastructure, so isn't great for
+# code size when deploying.
+console_error_panic_hook = {version = "0.1.1", optional = true}
+
+[dependencies.chrono]
+features = ["serde"]
+version = "0.4.19"
+
+[dependencies.serde]
+features = ["derive"]
+version = "1.0.130"
+
+[features]
+default = ["console_error_panic_hook"]
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[profile.release]
+# Tell `rustc` to optimize for small code size.
+opt-level = "s"
