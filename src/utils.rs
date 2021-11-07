@@ -48,7 +48,6 @@ pub async fn send_request(body: HttpRequest) -> Result<()> {
         .text()
         .await
         .unwrap();
-    console_log!("{}", resp);
     Ok(())
 }
 
