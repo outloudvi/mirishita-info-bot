@@ -3,6 +3,7 @@ use utils::{escape, send_request};
 use worker::Request as WRequest;
 use worker::*;
 
+mod constants;
 mod matsurihi;
 mod utils;
 
@@ -31,6 +32,9 @@ async fn handle_message(msg: telegram_bot_raw::Message) -> Result<()> {
             let last_event = ret.last().unwrap();
             respond_text(&format!("{}", last_event), msg.chat).await?;
             return Ok(());
+        }
+        if data.starts_with("/curr_event") {
+            let ret = matsurihi::get_events().await?;
         }
         respond_text(&format!("Command not found: {}", data), msg.chat).await?;
     }

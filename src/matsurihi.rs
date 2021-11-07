@@ -1,5 +1,6 @@
 use std::fmt::Display;
 
+use crate::constants::EVENT_TYPE_MAP;
 use chrono::{DateTime, Utc};
 use serde::Deserialize;
 use worker::*;
@@ -25,6 +26,11 @@ pub struct Event {
 impl Display for Event {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "**{}**\n", self.name)?;
+        write!(
+            f,
+            "Type: {}\n",
+            EVENT_TYPE_MAP.get(&self.typ).unwrap_or(&"Unknown")
+        )?;
         write!(f, "Starts: {}\n", self.schedule.begin_date)?;
         write!(f, "Ends: {}\n", self.schedule.end_date)?;
         Ok(())
