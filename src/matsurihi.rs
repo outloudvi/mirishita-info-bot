@@ -1,8 +1,70 @@
-use std::fmt::Display;
-
 use chrono::{DateTime, Utc};
 use serde::Deserialize;
+use std::fmt::Display;
 use worker::*;
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SkillItem {
+    id: u32,
+    description: String,
+    effect_id: u8,
+    evaluation: u8,
+    evaluation2: u8,
+    duration: u32,
+    interval: u32,
+    probability: u32,
+    value: Vec<u32>,
+}
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ConsumeItem {
+    id: u32,
+    name: String,
+    description: String,
+    resource_id: String,
+    model_id: String,
+    sort_id: u32,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CenterEffectItem {
+    id: u32,
+    description: String,
+    idol_type: u8,
+    specific_idol_type: Option<u8>,
+    attribute: u8,
+    value: u32,
+    song_type: Option<u8>,
+    attribute2: Option<u32>,
+    value2: Option<u32>,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CardItem {
+    id: u32,
+    pub name: String,
+    idol_id: u32,
+    pub resource_id: String,
+    rarity: u8,
+    event_id: Option<u32>,
+    category: String,
+    extra_type: u32,
+    costume: Option<ConsumeItem>,
+    bonus_costume: Option<ConsumeItem>,
+    rank5_costune: Option<ConsumeItem>,
+    flavor_text: String,
+    flavor_text_awakened: String,
+    level_max: u32,
+    level_max_awakened: u32,
+    center_effect: Option<CenterEffectItem>,
+    center_effect_name: String,
+    skill: Option<Vec<SkillItem>>,
+    skill_name: String,
+    add_date: DateTime<Utc>,
+}
 
 #[derive(Deserialize)]
 pub struct ScoreItem {
@@ -116,4 +178,20 @@ pub fn get_card_bg_url(card_res_id: &str, plus: bool) -> String {
         card_res_id,
         if plus { "1" } else { "0" },
     )
+}
+
+pub async fn get_card(card_id: u32) -> Result<CardItem> {
+    let mut ret = Fetch::Url(Url::parse(&format!(
+        "https://api.matsurihi.me/mltd/v1/cards/{}",
+        card_id
+    ))?)
+    .send()
+    .await?
+    .json::<Vec<CardItem>>()
+    .await?;
+    if ret.len() == 0 {
+        Err(worker::Error::RustError("No card found".to_string()))
+    } else {
+        Ok(ret.remove(0))
+    }
 }
