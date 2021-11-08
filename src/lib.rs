@@ -9,8 +9,9 @@
 //!
 //! It may also bring about some inspiration for anyone who want to run a
 //! telegram bot written with Rust on Cloudflare Workers.
+//!
+//! For bot command documentaion, see [`cmd`].
 
-use crate::matsurihi::{get_current_event_ids, get_event, get_event_borders};
 use crate::telegram::respond_text;
 use telegram_bot_raw::Update;
 use worker::Request as WRequest;
@@ -32,52 +33,23 @@ async fn handle_message(msg: telegram_bot_raw::Message) -> Result<()> {
             respond_text("Hi!", &msg.chat).await?;
             return Ok(());
         } else if data.starts_with("/last_event") {
-            let ret = matsurihi::get_events().await?;
-            if ret.is_empty() {
-                respond_text("No events found", &msg.chat).await?;
-                return Ok(());
+            let ret = cmd::handler__last_event(data, &msg).await?;
+            if !ret {
+                respond_text("Bad command usage", &msg.chat).await?;
             }
-            let last_event = ret.last().unwrap();
-            respond_text(&format!("{}", last_event), &msg.chat).await?;
+            return Ok(());
         } else if data.starts_with("/curr_event") {
-            let now = chrono::offset::Utc::now();
-            let ret = matsurihi::get_events().await?;
-            let curr_events = ret
-                .into_iter()
-                .filter(|x| x.schedule.begin_date <= now && x.schedule.end_date >= now)
-                .collect::<Vec<_>>();
-            if curr_events.is_empty() {
-                respond_text("No current event!", &msg.chat).await?;
-            } else {
-                respond_text(
-                    &curr_events
-                        .into_iter()
-                        .map(|x| x.to_string())
-                        .collect::<Vec<_>>()
-                        .join("\n"),
-                    &msg.chat,
-                )
-                .await?;
+            let ret = cmd::handler__curr_event(data, &msg).await?;
+            if !ret {
+                respond_text("Bad command usage", &msg.chat).await?;
             }
+            return Ok(());
         } else if data.starts_with("/curr_borders") {
-            let mut curr_event_ids = get_current_event_ids().await?;
-            if curr_event_ids.is_empty() {
-                respond_text("No current event!", &msg.chat).await?;
-                return Ok(());
+            let ret = cmd::handler__curr_borders(data, &msg).await?;
+            if !ret {
+                respond_text("Bad command usage", &msg.chat).await?;
             }
-            curr_event_ids.sort_unstable();
-            let curr_event_id = curr_event_ids.last().unwrap();
-            let event_info = get_event(*curr_event_id).await?;
-            let metrics = get_event_borders(*curr_event_id).await?;
-            let mut ret = format!("**{}**\n", event_info.name);
-            for k in metrics.event_point.scores {
-                if k.score.is_none() {
-                    break;
-                }
-                ret += &format!("Rank #{}: {}\n", k.rank, k.score.unwrap().round());
-            }
-            ret += &format!("Participants: {}", metrics.event_point.count);
-            respond_text(&ret, &msg.chat).await?;
+            return Ok(());
         } else if data.starts_with("/card") {
             let ret = cmd::handler__card(data, &msg).await?;
             if !ret {

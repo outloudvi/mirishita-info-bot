@@ -1,4 +1,16 @@
 //! Commands for the bot.
-mod card;
+use paste::paste;
 
-pub use card::handler as handler__card;
+macro_rules! add_command {
+    ($cmd:ident) => {
+        mod $cmd;
+        paste! {
+            pub use $cmd::handler as [<handler__ $cmd>];
+        }
+    };
+}
+
+add_command!(card);
+add_command!(curr_borders);
+add_command!(curr_event);
+add_command!(last_event);

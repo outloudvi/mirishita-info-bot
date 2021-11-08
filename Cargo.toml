@@ -15,6 +15,7 @@ version = "0.1.0"
 [dependencies]
 cfg-if = "0.1.2"
 lazy_static = "1.4.0"
+paste = "1.0"
 serde_json = "1.0.69"
 telegram-bot-raw = "0.8.0"
 worker = "0.0.7"
