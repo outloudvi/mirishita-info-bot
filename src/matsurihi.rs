@@ -110,9 +110,9 @@ pub struct Event {
 
 impl Display for Event {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "**{}**\n", self.name)?;
-        write!(f, "Starts: {}\n", self.schedule.begin_date)?;
-        write!(f, "Ends: {}\n", self.schedule.end_date)?;
+        writeln!(f, "**{}**", self.name)?;
+        writeln!(f, "Starts: {}", self.schedule.begin_date)?;
+        writeln!(f, "Ends: {}", self.schedule.end_date)?;
         Ok(())
     }
 }
@@ -189,7 +189,7 @@ pub async fn get_card(card_id: u32) -> Result<CardItem> {
     .await?
     .json::<Vec<CardItem>>()
     .await?;
-    if ret.len() == 0 {
+    if ret.is_empty() {
         Err(worker::Error::RustError("No card found".to_string()))
     } else {
         Ok(ret.remove(0))

@@ -14,7 +14,7 @@ use worker::Result;
 /// * /card [idol:str] - A random card from [idol]
 /// * /card [cardAssetId:str] - A card of assetId [cardAssetId]
 pub async fn handler(command: &str, msg: &Message) -> Result<bool> {
-    let splits = command.trim().split(" ").collect::<Vec<_>>();
+    let splits = command.trim().split(' ').collect::<Vec<_>>();
     if splits.len() != 2 {
         return Ok(false);
     }
@@ -32,7 +32,7 @@ pub async fn handler(command: &str, msg: &Message) -> Result<bool> {
         return Ok(true);
     }
 
-    for (k, v) in IDOL_ID_MAP.iter() {
+    for (_k, v) in IDOL_ID_MAP.iter() {
         if v == &target {
             // /card [idol]
             // TODO
@@ -43,5 +43,5 @@ pub async fn handler(command: &str, msg: &Message) -> Result<bool> {
     // /card [cardAssetId]
     let url = get_card_url(target, true, true);
     respond_img(&url, &url, &msg.chat).await?;
-    return Ok(true);
+    Ok(true)
 }

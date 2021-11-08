@@ -20,7 +20,7 @@ async fn handle_message(msg: telegram_bot_raw::Message) -> Result<()> {
             return Ok(());
         } else if data.starts_with("/last_event") {
             let ret = matsurihi::get_events().await?;
-            if ret.len() == 0 {
+            if ret.is_empty() {
                 respond_text("No events found", &msg.chat).await?;
                 return Ok(());
             }
@@ -33,8 +33,8 @@ async fn handle_message(msg: telegram_bot_raw::Message) -> Result<()> {
                 .into_iter()
                 .filter(|x| x.schedule.begin_date <= now && x.schedule.end_date >= now)
                 .collect::<Vec<_>>();
-            if curr_events.len() == 0 {
-                respond_text(&"No current event!", &msg.chat).await?;
+            if curr_events.is_empty() {
+                respond_text("No current event!", &msg.chat).await?;
             } else {
                 respond_text(
                     &curr_events
@@ -48,17 +48,17 @@ async fn handle_message(msg: telegram_bot_raw::Message) -> Result<()> {
             }
         } else if data.starts_with("/curr_borders") {
             let mut curr_event_ids = get_current_event_ids().await?;
-            if curr_event_ids.len() == 0 {
-                respond_text(&"No current event!", &msg.chat).await?;
+            if curr_event_ids.is_empty() {
+                respond_text("No current event!", &msg.chat).await?;
                 return Ok(());
             }
-            curr_event_ids.sort();
+            curr_event_ids.sort_unstable();
             let curr_event_id = curr_event_ids.last().unwrap();
             let event_info = get_event(*curr_event_id).await?;
             let metrics = get_event_borders(*curr_event_id).await?;
             let mut ret = format!("**{}**\n", event_info.name);
             for k in metrics.event_point.scores {
-                if let None = k.score {
+                if k.score.is_none() {
                     break;
                 }
                 ret += &format!("Rank #{}: {}\n", k.rank, k.score.unwrap().round());
@@ -87,13 +87,10 @@ pub async fn main(req: WRequest, env: Env) -> worker::Result<Response> {
     router
         .post_async("/1b248948646a", |mut req, _| async move {
             let tg_req = req.json::<Update>().await?;
-            match tg_req.kind {
-                telegram_bot_raw::UpdateKind::Message(msg) => {
-                    if let Err(x) = handle_message(msg).await {
-                        console_log!("Err: {}", x);
-                    }
+            if let telegram_bot_raw::UpdateKind::Message(msg) = tg_req.kind {
+                if let Err(x) = handle_message(msg).await {
+                    console_log!("Err: {}", x);
                 }
-                _ => {}
             }
             Response::ok("ok")
         })

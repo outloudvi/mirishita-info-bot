@@ -1,5 +1,5 @@
 use cfg_if::cfg_if;
-use telegram_bot_raw::{HttpRequest, Multipart};
+use telegram_bot_raw::{HttpRequest};
 use worker::wasm_bindgen::JsValue;
 use worker::Request as WRequest;
 use worker::*;
@@ -42,7 +42,7 @@ pub fn to_workers_request(one: HttpRequest) -> Result<WRequest> {
 
 pub async fn send_request(body: HttpRequest) -> Result<()> {
     let req = to_workers_request(body)?;
-    let resp = Fetch::Request(req).send().await?.text().await?;
+    let _resp = Fetch::Request(req).send().await?.text().await?;
     Ok(())
 }
 
