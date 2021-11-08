@@ -7,3 +7,5 @@ A Mirishita (ミリシタ) information bot based on [Princess by matsurihi.me](h
 ## License
 
 MIT
+
+\* The boilerplate is provided by Cloudflare under Apache License.
