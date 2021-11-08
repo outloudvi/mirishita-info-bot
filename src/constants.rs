@@ -82,4 +82,4 @@ lazy_static! {
     };
 }
 
-pub const BOT_TOKEN: &str = "UID:TOKEN";
+pub const BOT_TOKEN: &str = include_str!("../conf/BOT_TOKEN");
