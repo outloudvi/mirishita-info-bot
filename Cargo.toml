@@ -1,7 +1,15 @@
 [package]
 authors = ["Outvi V <oss+rust@outv.im>"]
+categories = ["api-bindings"]
+description = "Mirishita info bot & Wrapper for Princess API on matsurihi.me"
+documentation = "https://docs.rs/mirishita_info_bot"
 edition = "2021"
+homepage = "https://github.com/outloudvi/mirishita-info-bot"
+keywords = ["mirishita", "telegram-bot", "mltd", "cloudflare-workers"]
+license = "MIT"
 name = "mirishita_info_bot"
+readme = "README.md"
+repository = "https://github.com/outloudvi/mirishita-info-bot"
 version = "0.1.0"
 
 [dependencies]
