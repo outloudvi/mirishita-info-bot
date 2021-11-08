@@ -1,5 +1,5 @@
 use cfg_if::cfg_if;
-use telegram_bot_raw::{HttpRequest, Request, SendMessage, Update};
+use telegram_bot_raw::{HttpRequest, Multipart};
 use worker::wasm_bindgen::JsValue;
 use worker::Request as WRequest;
 use worker::*;
@@ -21,7 +21,7 @@ pub fn to_workers_request(one: HttpRequest) -> Result<WRequest> {
     match one.body {
         telegram_bot_raw::Body::Json(j) => {
             let mut hds = Headers::new();
-            hds.set("Content-Type", "application/json").unwrap();
+            hds.set("Content-Type", "application/json")?;
             let init = RequestInit {
                 method: match one.method {
                     telegram_bot_raw::Method::Get => Method::Get,
@@ -32,22 +32,36 @@ pub fn to_workers_request(one: HttpRequest) -> Result<WRequest> {
                 headers: hds,
                 redirect: RequestRedirect::Follow,
             };
-            let try_request = WRequest::new_with_init(&one.url.url(BOT_TOKEN), &init).unwrap();
+            let try_request = WRequest::new_with_init(&one.url.url(BOT_TOKEN), &init)?;
             Ok(try_request)
         }
+        // FormData: blocked by cloudflare/workers-rs#79
         _ => Err(Error::RustError("Not implemented yet".to_string())),
     }
 }
 
 pub async fn send_request(body: HttpRequest) -> Result<()> {
     let req = to_workers_request(body)?;
-    let resp = Fetch::Request(req)
-        .send()
-        .await
-        .unwrap()
-        .text()
-        .await
-        .unwrap();
+    let resp = Fetch::Request(req).send().await?.text().await?;
+    Ok(())
+}
+
+pub async fn send_raw_request(url: &str, body: JsValue) -> Result<()> {
+    console_log!("{:?}", body);
+    let mut hds = Headers::new();
+    hds.set("Content-Type", "application/json")?;
+    let init = RequestInit {
+        method: Method::Post,
+        body: Some(body),
+        cf: CfProperties::default(),
+        headers: hds,
+        redirect: RequestRedirect::Follow,
+    };
+
+    let req = WRequest::new_with_init(url, &init)?;
+
+    let resp = Fetch::Request(req).send().await?.text().await?;
+    console_log!("{}", resp,);
     Ok(())
 }
 

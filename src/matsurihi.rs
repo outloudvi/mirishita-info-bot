@@ -100,3 +100,20 @@ pub async fn get_current_event_ids() -> Result<Vec<u32>> {
         .collect();
     Ok(ret)
 }
+
+pub fn get_card_url(card_res_id: &str, plus: bool, with_annotation: bool) -> String {
+    format!(
+        "https://storage.matsurihi.me/mltd/card/{}_{}_{}.png",
+        card_res_id,
+        if plus { "1" } else { "0" },
+        if with_annotation { "a" } else { "b" }
+    )
+}
+
+pub fn get_card_bg_url(card_res_id: &str, plus: bool) -> String {
+    format!(
+        "https://storage.matsurihi.me/mltd/card_bg/{}_{}.png",
+        card_res_id,
+        if plus { "1" } else { "0" },
+    )
+}

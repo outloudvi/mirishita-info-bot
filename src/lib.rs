@@ -1,41 +1,32 @@
-use telegram_bot_raw::{MessageChat, Request, SendMessage, Update};
-use utils::{escape, send_request};
+use crate::matsurihi::{get_current_event_ids, get_event, get_event_borders};
+use crate::telegram::respond_text;
+use telegram_bot_raw::Update;
 use worker::Request as WRequest;
 use worker::*;
 
-use crate::matsurihi::{get_current_event_ids, get_event, get_event_borders};
-
+mod cmd;
 mod constants;
 mod matsurihi;
+mod telegram;
 mod utils;
-
-async fn respond_text(text: &str, chat: MessageChat) -> Result<()> {
-    let mut msg = SendMessage::new(chat, escape(text));
-    msg.parse_mode(telegram_bot_raw::ParseMode::MarkdownV2);
-    let req = msg.serialize().map_err(|e| e.to_string())?;
-    send_request(req).await
-}
 
 async fn handle_message(msg: telegram_bot_raw::Message) -> Result<()> {
     use telegram_bot_raw::MessageKind::Text;
 
-    if let Text { data, .. } = msg.kind {
+    if let Text { ref data, .. } = msg.kind {
         let data = data.trim();
         if data.starts_with("/ping") {
-            respond_text("Hi!", msg.chat).await?;
+            respond_text("Hi!", &msg.chat).await?;
             return Ok(());
-        }
-        if data.starts_with("/last_event") {
+        } else if data.starts_with("/last_event") {
             let ret = matsurihi::get_events().await?;
             if ret.len() == 0 {
-                respond_text("No events found", msg.chat).await?;
+                respond_text("No events found", &msg.chat).await?;
                 return Ok(());
             }
             let last_event = ret.last().unwrap();
-            respond_text(&format!("{}", last_event), msg.chat).await?;
-            return Ok(());
-        }
-        if data.starts_with("/curr_event") {
+            respond_text(&format!("{}", last_event), &msg.chat).await?;
+        } else if data.starts_with("/curr_event") {
             let now = chrono::offset::Utc::now();
             let ret = matsurihi::get_events().await?;
             let curr_events = ret
@@ -43,7 +34,7 @@ async fn handle_message(msg: telegram_bot_raw::Message) -> Result<()> {
                 .filter(|x| x.schedule.begin_date <= now && x.schedule.end_date >= now)
                 .collect::<Vec<_>>();
             if curr_events.len() == 0 {
-                respond_text(&"No current event!", msg.chat).await?;
+                respond_text(&"No current event!", &msg.chat).await?;
             } else {
                 respond_text(
                     &curr_events
@@ -51,16 +42,14 @@ async fn handle_message(msg: telegram_bot_raw::Message) -> Result<()> {
                         .map(|x| x.to_string())
                         .collect::<Vec<_>>()
                         .join("\n"),
-                    msg.chat,
+                    &msg.chat,
                 )
                 .await?;
             }
-            return Ok(());
-        }
-        if data.starts_with("/curr_borders") {
+        } else if data.starts_with("/curr_borders") {
             let mut curr_event_ids = get_current_event_ids().await?;
             if curr_event_ids.len() == 0 {
-                respond_text(&"No current event!", msg.chat).await?;
+                respond_text(&"No current event!", &msg.chat).await?;
                 return Ok(());
             }
             curr_event_ids.sort();
@@ -75,10 +64,16 @@ async fn handle_message(msg: telegram_bot_raw::Message) -> Result<()> {
                 ret += &format!("Rank #{}: {}\n", k.rank, k.score.unwrap().round());
             }
             ret += &format!("Participants: {}", metrics.event_point.count);
-            respond_text(&ret, msg.chat).await?;
+            respond_text(&ret, &msg.chat).await?;
+        } else if data.starts_with("/card") {
+            let ret = cmd::handler__card(data, &msg).await?;
+            if !ret {
+                respond_text("Bad command usage", &msg.chat).await?;
+            }
             return Ok(());
+        } else {
+            respond_text(&format!("Command not found: {}", data), &msg.chat).await?;
         }
-        respond_text(&format!("Command not found: {}", data), msg.chat).await?;
     }
 
     Ok(())
