@@ -5,6 +5,7 @@ use worker::*;
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[allow(dead_code)]
 pub struct SkillItem {
     id: u32,
     description: String,
@@ -18,6 +19,7 @@ pub struct SkillItem {
 }
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[allow(dead_code)]
 pub struct ConsumeItem {
     id: u32,
     name: String,
@@ -29,6 +31,7 @@ pub struct ConsumeItem {
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[allow(dead_code)]
 pub struct CenterEffectItem {
     id: u32,
     description: String,
@@ -43,6 +46,7 @@ pub struct CenterEffectItem {
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[allow(dead_code)]
 pub struct CardItem {
     id: u32,
     pub name: String,
@@ -62,6 +66,7 @@ pub struct CardItem {
     center_effect: Option<CenterEffectItem>,
     center_effect_name: String,
     skill: Option<Vec<SkillItem>>,
+    // Different from docs
     skill_name: String,
     add_date: DateTime<Utc>,
 }
@@ -76,6 +81,7 @@ pub struct ScoreItem {
 #[serde(rename_all = "camelCase")]
 pub struct PointMetrics {
     pub scores: Vec<ScoreItem>,
+    #[allow(dead_code)]
     summary_time: DateTime<Utc>,
     pub count: u32,
 }
@@ -84,7 +90,9 @@ pub struct PointMetrics {
 #[serde(rename_all = "camelCase")]
 pub struct EventBorderView {
     pub event_point: PointMetrics,
+    #[allow(dead_code)]
     high_score: PointMetrics,
+    #[allow(dead_code)]
     lounge_point: PointMetrics,
 }
 
@@ -93,9 +101,13 @@ pub struct EventBorderView {
 pub struct EventSchedule {
     pub begin_date: DateTime<Utc>,
     pub end_date: DateTime<Utc>,
+    #[allow(dead_code)]
     page_begin_date: DateTime<Utc>,
+    #[allow(dead_code)]
     page_end_date: DateTime<Utc>,
+    #[allow(dead_code)]
     boost_begin_date: Option<DateTime<Utc>>,
+    #[allow(dead_code)]
     boost_end_date: Option<DateTime<Utc>>,
 }
 
@@ -104,6 +116,7 @@ pub struct Event {
     id: u32,
     pub name: String,
     #[serde(rename = "type")]
+    #[allow(dead_code)]
     typ: u32,
     pub schedule: EventSchedule,
 }
@@ -172,6 +185,7 @@ pub fn get_card_url(card_res_id: &str, plus: bool, with_annotation: bool) -> Str
     )
 }
 
+#[allow(dead_code)]
 pub fn get_card_bg_url(card_res_id: &str, plus: bool) -> String {
     format!(
         "https://storage.matsurihi.me/mltd/card_bg/{}_{}.png",
