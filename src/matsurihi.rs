@@ -1,3 +1,4 @@
+/// This is the bindings and typings from Matsurihime.
 use chrono::{DateTime, Utc};
 use serde::Deserialize;
 use std::fmt::Display;
@@ -115,6 +116,7 @@ pub struct EventSchedule {
 pub struct Event {
     id: u32,
     pub name: String,
+    /// See `EVENT_TYPE_MAP` in constants for the mapping relationships.
     #[serde(rename = "type")]
     #[allow(dead_code)]
     typ: u32,
@@ -130,6 +132,7 @@ impl Display for Event {
     }
 }
 
+/// Get all events.
 pub async fn get_events() -> Result<Vec<Event>> {
     let ret = Fetch::Url(Url::parse("https://api.matsurihi.me/mltd/v1/events")?)
         .send()
@@ -139,6 +142,7 @@ pub async fn get_events() -> Result<Vec<Event>> {
     Ok(ret)
 }
 
+/// Get an event by its ID.
 pub async fn get_event(event_id: u32) -> Result<Event> {
     let ret = Fetch::Url(Url::parse(&format!(
         "https://api.matsurihi.me/mltd/v1/events/{}",
@@ -151,6 +155,7 @@ pub async fn get_event(event_id: u32) -> Result<Event> {
     Ok(ret)
 }
 
+/// Get the metrics for an event by its ID.
 pub async fn get_event_borders(event_id: u32) -> Result<EventBorderView> {
     let ret = Fetch::Url(Url::parse(&format!(
         "https://api.matsurihi.me/mltd/v1/events/{}/rankings/borderPoints",
@@ -163,6 +168,7 @@ pub async fn get_event_borders(event_id: u32) -> Result<EventBorderView> {
     Ok(ret)
 }
 
+/// Get the IDs for all ongoing events.
 pub async fn get_current_event_ids() -> Result<Vec<u32>> {
     let now = chrono::Utc::now();
     let evts = get_events().await?;
@@ -176,6 +182,7 @@ pub async fn get_current_event_ids() -> Result<Vec<u32>> {
     Ok(ret)
 }
 
+/// Get a card's URL.
 pub fn get_card_url(card_res_id: &str, plus: bool, with_annotation: bool) -> String {
     format!(
         "https://storage.matsurihi.me/mltd/card/{}_{}_{}.png",
@@ -185,6 +192,7 @@ pub fn get_card_url(card_res_id: &str, plus: bool, with_annotation: bool) -> Str
     )
 }
 
+/// Get a card background's URL.
 #[allow(dead_code)]
 pub fn get_card_bg_url(card_res_id: &str, plus: bool) -> String {
     format!(
@@ -194,6 +202,7 @@ pub fn get_card_bg_url(card_res_id: &str, plus: bool) -> String {
     )
 }
 
+/// Get the metadata for a card.
 pub async fn get_card(card_id: u32) -> Result<CardItem> {
     let mut ret = Fetch::Url(Url::parse(&format!(
         "https://api.matsurihi.me/mltd/v1/cards/{}",

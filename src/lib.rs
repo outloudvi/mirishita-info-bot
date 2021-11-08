@@ -1,3 +1,15 @@
+//! # mirishita_info_bot
+//!
+//! This is a Telegram bot written with the help of [workers-rs](https://github.com/cloudflare/workers-rs)
+//! and [telegram-bot-raw](https://lib.rs/crates/telegram-bot-raw).
+//!
+//! The data source is Matsurihi.me's [Princess](https://api.matsurihi.me/docs/).
+//!
+//! You can play with the bot at Telegram [@mirishita_info_bot](https://t.me/@mirishita_info_bot).
+//!
+//! It may also bring about some inspiration for anyone who want to run a
+//! telegram bot written with Rust on Cloudflare Workers.
+
 use crate::matsurihi::{get_current_event_ids, get_event, get_event_borders};
 use crate::telegram::respond_text;
 use telegram_bot_raw::Update;
@@ -10,6 +22,7 @@ mod matsurihi;
 mod telegram;
 mod utils;
 
+/// The message handler.
 async fn handle_message(msg: telegram_bot_raw::Message) -> Result<()> {
     use telegram_bot_raw::MessageKind::Text;
 
@@ -79,6 +92,7 @@ async fn handle_message(msg: telegram_bot_raw::Message) -> Result<()> {
     Ok(())
 }
 
+/// The function bound to "fetch" event.
 #[event(fetch)]
 pub async fn main(req: WRequest, env: Env) -> worker::Result<Response> {
     utils::set_panic_hook();

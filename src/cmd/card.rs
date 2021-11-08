@@ -4,11 +4,11 @@ use crate::{matsurihi::get_card_url, telegram::respond_img};
 use telegram_bot_raw::Message;
 use worker::Result;
 
-/// /card
+/// ## /card
 ///
-/// This command is used to spawn a card interface.
+/// This command is used to display a card.
+///
 /// This command has the following signatures in matching preference:
-///
 /// * /card - A random card
 /// * /card [id:int] - A card of id [id]
 /// * /card [idol:str] - A random card from [idol]

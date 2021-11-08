@@ -1,7 +1,14 @@
+/// Constants for the bot.
+///
+/// They are mostly about Mirishita and THE IDOLM@STER and probably no
+/// practical use for whoever only care about the Rust side.
 use lazy_static::lazy_static;
 use std::collections::HashMap;
 
 lazy_static! {
+    /// This is a mapping between internal ID and idol name. The names are
+    /// all canonical Japanese names with no space between first and last
+    /// names.
     pub static ref IDOL_ID_MAP: HashMap<u32, &'static str> = {
         let mut m = HashMap::new();
         m.insert(1, "天海春香");
@@ -61,7 +68,9 @@ lazy_static! {
 }
 
 lazy_static! {
-    // https://api.matsurihi.me/docs/#mltd-v1-events
+    /// Event types.
+    ///
+    /// Check <https://api.matsurihi.me/docs/#mltd-v1-events>.
     pub static ref EVENT_TYPE_MAP: HashMap<u32, &'static str> = {
         let mut m = HashMap::new();
         m.insert(1 ,"THEATER SHOW TIME☆");
