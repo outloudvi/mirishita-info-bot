@@ -1,5 +1,6 @@
+//! Utility functions.
 use cfg_if::cfg_if;
-use telegram_bot_raw::{HttpRequest};
+use telegram_bot_raw::HttpRequest;
 use worker::wasm_bindgen::JsValue;
 use worker::Request as WRequest;
 use worker::*;
@@ -17,6 +18,8 @@ cfg_if! {
     }
 }
 
+/// Convert [`HttpRequest`](telegram_bot_raw::requests::_base::http::HttpRequest)
+/// to worker's [`Request`](worker::request).
 pub fn to_workers_request(one: HttpRequest) -> Result<WRequest> {
     match one.body {
         telegram_bot_raw::Body::Json(j) => {
@@ -40,12 +43,14 @@ pub fn to_workers_request(one: HttpRequest) -> Result<WRequest> {
     }
 }
 
+/// Send a request finalized with `telegram_bot_raw`'s [`HttpRequest`](telegram_bot_raw::requests::_base::HttpRequest).
 pub async fn send_request(body: HttpRequest) -> Result<()> {
     let req = to_workers_request(body)?;
     let _resp = Fetch::Request(req).send().await?.text().await?;
     Ok(())
 }
 
+/// Send a raw request finalized with [`wasm_bindgen::JsValue`].
 pub async fn send_raw_request(url: &str, body: JsValue) -> Result<()> {
     console_log!("{:?}", body);
     let mut hds = Headers::new();
@@ -65,7 +70,7 @@ pub async fn send_raw_request(url: &str, body: JsValue) -> Result<()> {
     Ok(())
 }
 
-// https://docs.rs/teloxide/0.5.3/src/teloxide/utils/markdown.rs.html#91-110
+/// Escapes Markdown text. See [`teloxide::utils::markdown::escape`].
 pub fn escape(s: &str) -> String {
     s.replace("_", r"\_")
         .replace("~", r"\~")

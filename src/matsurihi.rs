@@ -1,4 +1,6 @@
-/// This is the bindings and typings from Matsurihime.
+//! This is the bindings and typings from Matsurihime.
+//!
+//! Here is onlay a part of the APIs and schemas. Read [Princess API Docs](https://api.matsurihi.me/docs/) for details.
 use chrono::{DateTime, Utc};
 use serde::Deserialize;
 use std::fmt::Display;

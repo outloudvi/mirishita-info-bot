@@ -1,7 +1,7 @@
-/// Constants for the bot.
-///
-/// They are mostly about Mirishita and THE IDOLM@STER and probably no
-/// practical use for whoever only care about the Rust side.
+//! Constants for the bot.
+//!
+//! They are mostly about Mirishita and THE IDOLM@STER and probably no
+//! practical use for whoever only care about the Rust side.
 use lazy_static::lazy_static;
 use std::collections::HashMap;
 
@@ -91,4 +91,5 @@ lazy_static! {
     };
 }
 
+/// The BOT_TOKEN for the bot. Should be defined in `conf/BOT_TOKEN`.
 pub const BOT_TOKEN: &str = include_str!("../conf/BOT_TOKEN");

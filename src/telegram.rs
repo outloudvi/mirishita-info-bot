@@ -1,3 +1,4 @@
+//! The part used to communicate with Telegram.
 use crate::{
     constants::BOT_TOKEN,
     utils::{escape, send_raw_request, send_request},
@@ -6,6 +7,9 @@ use serde::Serialize;
 use telegram_bot_raw::{MessageChat, SendMessage};
 use worker::{wasm_bindgen::JsValue, Result};
 
+/// Send text to a chat.
+///
+/// It makes use of [`telegram_bot_raw::SendMessage`].
 pub async fn respond_text(text: &str, chat: &MessageChat) -> Result<()> {
     let mut msg = SendMessage::new(chat, escape(text));
     msg.parse_mode(telegram_bot_raw::ParseMode::MarkdownV2);
@@ -20,7 +24,10 @@ struct ImageMessageBody {
     caption: String,
 }
 
-// Note that it's a temporary solution before cloudflare/workers-rs#79
+/// Send an image to a chat.
+///
+/// It does not make use of [`telegram_bot_raw::SendPhoto`], because workers-rs
+/// does not support sending requests with [`worker::FormData`] yet. ([cloudflare/workers-rs#79](https://github.com/cloudflare/workers-rs/issues/79))
 pub async fn respond_img(url: &str, caption: &str, chat: &MessageChat) -> Result<()> {
     let body = ImageMessageBody {
         photo: url.to_string(),

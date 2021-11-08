@@ -16,11 +16,11 @@ use telegram_bot_raw::Update;
 use worker::Request as WRequest;
 use worker::*;
 
-mod cmd;
-mod constants;
-mod matsurihi;
-mod telegram;
-mod utils;
+pub mod cmd;
+pub mod constants;
+pub mod matsurihi;
+pub mod telegram;
+pub mod utils;
 
 /// The message handler.
 async fn handle_message(msg: telegram_bot_raw::Message) -> Result<()> {
@@ -92,7 +92,6 @@ async fn handle_message(msg: telegram_bot_raw::Message) -> Result<()> {
     Ok(())
 }
 
-/// The function bound to "fetch" event.
 #[event(fetch)]
 pub async fn main(req: WRequest, env: Env) -> worker::Result<Response> {
     utils::set_panic_hook();
