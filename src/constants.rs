@@ -92,4 +92,4 @@ lazy_static! {
 }
 
 /// The BOT_TOKEN for the bot. Should be defined in `conf/BOT_TOKEN`.
-pub const BOT_TOKEN: String = String::from(include_str!("../conf/BOT_TOKEN")).trim();
+pub const BOT_TOKEN: &str = include_str!("../conf/BOT_TOKEN");

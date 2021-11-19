@@ -21,6 +21,7 @@ cfg_if! {
 /// Convert [`HttpRequest`](telegram_bot_raw::requests::_base::http::HttpRequest)
 /// to worker's [`Request`](worker::request).
 pub fn to_workers_request(one: HttpRequest) -> Result<WRequest> {
+    let bot_token = BOT_TOKEN.to_string();
     match one.body {
         telegram_bot_raw::Body::Json(j) => {
             let mut hds = Headers::new();
@@ -35,7 +36,7 @@ pub fn to_workers_request(one: HttpRequest) -> Result<WRequest> {
                 headers: hds,
                 redirect: RequestRedirect::Follow,
             };
-            let try_request = WRequest::new_with_init(&one.url.url(BOT_TOKEN), &init)?;
+            let try_request = WRequest::new_with_init(&one.url.url(bot_token.trim()), &init)?;
             Ok(try_request)
         }
         // FormData: blocked by cloudflare/workers-rs#79
@@ -47,6 +48,7 @@ pub fn to_workers_request(one: HttpRequest) -> Result<WRequest> {
 pub async fn send_request(body: HttpRequest) -> Result<()> {
     let req = to_workers_request(body)?;
     let _resp = Fetch::Request(req).send().await?.text().await?;
+    console_log!("Returns: {}", _resp);
     Ok(())
 }
 
