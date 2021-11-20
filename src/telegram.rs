@@ -40,3 +40,11 @@ pub async fn respond_img(url: &str, caption: &str, chat: &MessageChat) -> Result
     )
     .await
 }
+
+pub async fn respond_raw(method: &str, body: &str) -> Result<()> {
+    send_raw_request(
+        &format!("https://api.telegram.org/bot{}/{}", BOT_TOKEN, method),
+        JsValue::from_str(body),
+    )
+    .await
+}

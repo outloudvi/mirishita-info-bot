@@ -13,10 +13,12 @@ repository = "https://github.com/outloudvi/mirishita-info-bot"
 version = "0.1.1"
 
 [dependencies]
+bincode = "1.3.3"
 cfg-if = "0.1.2"
 lazy_static = "1.4.0"
 paste = "1.0"
 serde_json = "1.0.69"
+serde_repr = "0.1.7"
 telegram-bot-raw = "0.8.0"
 worker = "0.0.7"
 # The `console_error_panic_hook` crate provides better debugging of panics by
