@@ -1,10 +1,12 @@
+use crate::constants::IDOL_ID_MAP;
 use crate::{callback_types::CallbackType, telegram::respond_raw};
 use lazy_static::lazy_static;
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use std::collections::HashMap;
-use telegram_bot_raw::{InlineKeyboardButton, InlineKeyboardMarkup, Message, SendMessage};
+use telegram_bot_raw::{InlineKeyboardButton, InlineKeyboardMarkup, Message, SendMessage, User};
 use worker::Result;
 
+/// These are the categories of idols.
 #[derive(Clone, Hash, PartialEq, Eq, Serialize_repr, Deserialize_repr)]
 #[repr(u8)]
 pub enum IdolCategory {
@@ -16,7 +18,9 @@ pub enum IdolCategory {
 
 lazy_static! {
     /// This is a mapping between internal idol ID and category name.
-    pub static ref IDOL_CATEGORY_MAP: HashMap<IdolCategory, Vec<u8>> = {
+    ///
+    /// You can have all idol IDs at [`IDOL_ID_MAP`].
+    pub static ref IDOL_CATEGORY_MAP: HashMap<IdolCategory, Vec<u32>> = {
         let mut m = HashMap::new();
         m.insert(IdolCategory::NamukoPro, vec![1,2,3,4,5,6,7,8,9,10,11,12,13]);
         m.insert(IdolCategory::PrincessStars, vec![14,17,19,21,26,27,28,29,30,32,36,37,43]);
@@ -58,5 +62,39 @@ pub async fn handler(_: &str, msg: &Message) -> Result<bool> {
     reply_msg.reply_markup(kbmarkup);
     let reply_msg = serde_json::to_string(&reply_msg)?;
     respond_raw("sendMessage", &reply_msg).await?;
+    Ok(true)
+}
+
+/// Callback for /list_characters.
+///
+/// This shall be the step 2 (character selection) of /list_characters.
+pub async fn respond_step_2(idol_category: IdolCategory, from: User) -> Result<bool> {
+    if let Some(cat) = IDOL_CATEGORY_MAP.get(&idol_category) {
+        let kbmarkup = cat
+            .chunks(3)
+            .map(|iarr| {
+                iarr.iter()
+                    .map(|i| {
+                        let cbt = CallbackType::ListIdol(*i);
+                        let dec = bincode::serialize(&cbt).unwrap();
+                        let dst = std::str::from_utf8(&dec).unwrap();
+                        InlineKeyboardButton::callback(IDOL_ID_MAP.get(i).unwrap(), dst)
+                    })
+                    .collect::<Vec<_>>()
+            })
+            .fold(InlineKeyboardMarkup::new(), |mut kbd, vek| {
+                kbd.add_row(vek);
+                kbd
+            });
+
+        let text = format!(
+            "You've selected: {}\nNow select an idol...",
+            IDOL_CATEGORY_NAMES.get(&idol_category).unwrap()
+        );
+        let mut reply_msg = SendMessage::new(&from, &text);
+        reply_msg.reply_markup(kbmarkup);
+        let reply_msg = serde_json::to_string(&reply_msg)?;
+        respond_raw("sendMessage", &reply_msg).await?;
+    }
     Ok(true)
 }

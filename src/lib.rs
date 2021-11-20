@@ -12,6 +12,8 @@
 //!
 //! For bot command documentaion, see [`cmd`].
 
+use callback_types::CallbackType;
+use telegram::respond_callback_query;
 use telegram_bot_raw::Update;
 use worker::Request as WRequest;
 use worker::*;
@@ -38,6 +40,19 @@ async fn handle_message(msg: telegram_bot_raw::Message) -> Result<()> {
     }
 }
 
+/// The callbackQuery handler.
+async fn handle_callback(cb_raw: telegram_bot_raw::CallbackQuery) -> Result<()> {
+    if let None = cb_raw.data {
+        // No data, skipping
+        return Ok(());
+    }
+    let callback: CallbackType =
+        bincode::deserialize(cb_raw.data.unwrap().as_bytes()).map_err(|e| e.to_string())?;
+    handler::handler_callback(callback, cb_raw.from).await?;
+    return Ok(());
+}
+
+/// The entrypoint to the script.
 #[event(fetch)]
 pub async fn main(req: WRequest, env: Env) -> worker::Result<Response> {
     utils::set_panic_hook();
@@ -52,15 +67,14 @@ pub async fn main(req: WRequest, env: Env) -> worker::Result<Response> {
                         console_log!("Err: {}", x);
                     }
                 }
-                telegram_bot_raw::UpdateKind::EditedMessage(_) => todo!(),
-                telegram_bot_raw::UpdateKind::ChannelPost(_) => todo!(),
-                telegram_bot_raw::UpdateKind::EditedChannelPost(_) => todo!(),
-                telegram_bot_raw::UpdateKind::InlineQuery(_) => todo!(),
-                telegram_bot_raw::UpdateKind::CallbackQuery(_) => todo!(),
-                telegram_bot_raw::UpdateKind::Poll(_) => todo!(),
-                telegram_bot_raw::UpdateKind::PollAnswer(_) => todo!(),
-                telegram_bot_raw::UpdateKind::Error(_) => todo!(),
-                telegram_bot_raw::UpdateKind::Unknown => todo!(),
+                telegram_bot_raw::UpdateKind::CallbackQuery(cb) => {
+                    if let Err(x) = handle_callback(cb.clone()).await {
+                        console_log!("Err: {}", x);
+                    } else {
+                        respond_callback_query(&cb).await?;
+                    }
+                }
+                _ => {}
             }
             Response::ok("ok")
         })

@@ -4,7 +4,7 @@ use crate::{
     utils::{escape, send_raw_request, send_request},
 };
 use serde::Serialize;
-use telegram_bot_raw::{MessageChat, SendMessage};
+use telegram_bot_raw::{CallbackQuery, MessageChat, SendMessage, ToCallbackQueryId};
 use worker::{wasm_bindgen::JsValue, Result};
 
 /// Send text to a chat.
@@ -41,6 +41,13 @@ pub async fn respond_img(url: &str, caption: &str, chat: &MessageChat) -> Result
     .await
 }
 
+/// Respond to callback queries.
+pub async fn respond_callback_query(query: &CallbackQuery) -> Result<()> {
+    let body = ToCallbackQueryId::to_callback_query_id(query);
+    Ok(respond_raw("answerCallbackQuery", &serde_json::to_string(&body)?).await?)
+}
+
+/// Send a raw response.
 pub async fn respond_raw(method: &str, body: &str) -> Result<()> {
     send_raw_request(
         &format!("https://api.telegram.org/bot{}/{}", BOT_TOKEN, method),
