@@ -2,8 +2,9 @@
 //!
 //! They are mostly about Mirishita and THE IDOLM@STER and probably no
 //! practical use for whoever only care about the Rust side.
-use lazy_static::lazy_static;
 use std::collections::HashMap;
+
+use lazy_static::lazy_static;
 
 lazy_static! {
     /// This is a mapping between internal ID and idol name. The names are

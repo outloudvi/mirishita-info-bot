@@ -15,13 +15,14 @@
 use callback_types::CallbackType;
 use telegram::respond_callback_query;
 use telegram_bot_raw::Update;
-use worker::Request as WRequest;
-use worker::*;
+use worker::{
+    console_log, event, wasm_bindgen, wasm_bindgen_futures, worker_sys, Request as WRequest, Result,
+};
 
-pub mod callback_types;
-pub mod cmd;
+pub(crate) mod callback_types;
+pub(crate) mod cmd;
 pub mod constants;
-pub mod handler;
+pub(crate) mod handler;
 pub mod matsurihi;
 pub mod telegram;
 pub mod utils;
@@ -54,7 +55,9 @@ async fn handle_callback(cb_raw: telegram_bot_raw::CallbackQuery) -> Result<()> 
 
 /// The entrypoint to the script.
 #[event(fetch)]
-pub async fn main(req: WRequest, env: Env) -> worker::Result<Response> {
+pub async fn main(req: WRequest, env: worker::Env) -> worker::Result<worker::Response> {
+    use worker::*;
+
     utils::set_panic_hook();
     let router = Router::new();
 

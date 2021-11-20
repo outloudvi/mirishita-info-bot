@@ -1,11 +1,11 @@
 //! The part used to communicate with Telegram.
-use crate::{
-    constants::BOT_TOKEN,
-    utils::{escape, send_raw_request, send_request},
-};
 use serde::Serialize;
 use telegram_bot_raw::{CallbackQuery, MessageChat, SendMessage, ToCallbackQueryId};
-use worker::{wasm_bindgen::JsValue, Result};
+use worker::wasm_bindgen::JsValue;
+use worker::Result;
+
+use crate::constants::BOT_TOKEN;
+use crate::utils::{escape, send_raw_request, send_request};
 
 /// Send text to a chat.
 ///

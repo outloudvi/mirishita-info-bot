@@ -1,11 +1,12 @@
 //! Commands for the bot.
 use paste::paste;
 
+#[doc(hidden)]
 macro_rules! add_command {
     ($cmd:ident) => {
         pub(crate) mod $cmd;
         paste! {
-            pub use $cmd::handler as [<handler__ $cmd>];
+            pub(crate) use $cmd::handler as [<handler__ $cmd>];
         }
     };
 }

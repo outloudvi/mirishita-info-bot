@@ -9,7 +9,7 @@ use worker::Result;
 /// These are the categories of idols.
 #[derive(Clone, Hash, PartialEq, Eq, Serialize_repr, Deserialize_repr)]
 #[repr(u8)]
-pub enum IdolCategory {
+pub(crate) enum IdolCategory {
     NamukoPro = 0,
     PrincessStars = 1,
     FairyStars = 2,
@@ -20,7 +20,7 @@ lazy_static! {
     /// This is a mapping between internal idol ID and category name.
     ///
     /// You can have all idol IDs at [`IDOL_ID_MAP`].
-    pub static ref IDOL_CATEGORY_MAP: HashMap<IdolCategory, Vec<u32>> = {
+    pub(crate) static ref IDOL_CATEGORY_MAP: HashMap<IdolCategory, Vec<u32>> = {
         let mut m = HashMap::new();
         m.insert(IdolCategory::NamukoPro, vec![1,2,3,4,5,6,7,8,9,10,11,12,13]);
         m.insert(IdolCategory::PrincessStars, vec![14,17,19,21,26,27,28,29,30,32,36,37,43]);
@@ -30,7 +30,7 @@ lazy_static! {
     };
 
     /// This is a mapping between category enum and category name.
-    pub static ref IDOL_CATEGORY_NAMES: HashMap<IdolCategory, &'static str> = {
+    pub(crate) static ref IDOL_CATEGORY_NAMES: HashMap<IdolCategory, &'static str> = {
         let mut m = HashMap::new();
         m.insert(IdolCategory::NamukoPro, "765PRO Allstars");
         m.insert(IdolCategory::PrincessStars, "Princess Stars");
@@ -43,7 +43,7 @@ lazy_static! {
 /// ## /list_characters
 ///
 /// This command lists all characters for card lookup.
-pub async fn handler(_: &str, msg: &Message) -> Result<bool> {
+pub(crate) async fn handler(_: &str, msg: &Message) -> Result<bool> {
     let mut kbmarkup = InlineKeyboardMarkup::new();
     for i in [
         IdolCategory::NamukoPro,
@@ -68,7 +68,7 @@ pub async fn handler(_: &str, msg: &Message) -> Result<bool> {
 /// Callback for /list_characters.
 ///
 /// This shall be the step 2 (character selection) of /list_characters.
-pub async fn respond_step_2(idol_category: IdolCategory, from: User) -> Result<bool> {
+pub(crate) async fn respond_step_2(idol_category: IdolCategory, from: User) -> Result<bool> {
     if let Some(cat) = IDOL_CATEGORY_MAP.get(&idol_category) {
         let kbmarkup = cat
             .chunks(3)

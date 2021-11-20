@@ -13,7 +13,7 @@ use worker::Result;
 /// * /card [id:int] - A card of id [id]
 /// * /card [idol:str] - A random card from [idol]
 /// * /card [cardAssetId:str] - A card of assetId [cardAssetId]
-pub async fn handler(command: &str, msg: &Message) -> Result<bool> {
+pub(crate) async fn handler(command: &str, msg: &Message) -> Result<bool> {
     let splits = command.trim().split(' ').collect::<Vec<_>>();
     if splits.len() != 2 {
         return Ok(false);

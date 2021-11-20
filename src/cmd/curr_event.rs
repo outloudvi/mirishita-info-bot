@@ -1,12 +1,13 @@
-use crate::matsurihi::{get_current_event_ids, get_event, get_event_borders};
-use crate::telegram::respond_text;
 use telegram_bot_raw::Message;
 use worker::Result;
+
+use crate::matsurihi::{get_current_event_ids, get_event, get_event_borders};
+use crate::telegram::respond_text;
 
 /// ## /curr_event
 ///
 /// This command is used to display the current event.
-pub async fn handler(_: &str, msg: &Message) -> Result<bool> {
+pub(crate) async fn handler(_: &str, msg: &Message) -> Result<bool> {
     let mut curr_event_ids = get_current_event_ids().await?;
     if curr_event_ids.is_empty() {
         respond_text("No current event!", &msg.chat).await?;

@@ -1,13 +1,15 @@
-use crate::{
-    callback_types::CallbackType,
-    cmd::{self, list_characters::respond_step_2},
-    telegram::respond_text,
-};
+//! Various handlers.
+
 use telegram_bot_raw::{Message, User};
 use worker::Result;
 
+use crate::callback_types::CallbackType;
+use crate::cmd;
+use crate::cmd::list_characters::respond_step_2;
+use crate::telegram::respond_text;
+
 /// Handler for all callback items.
-pub async fn handler_callback(cb: CallbackType, from: User) -> Result<()> {
+pub(crate) async fn handler_callback(cb: CallbackType, from: User) -> Result<()> {
     match cb {
         CallbackType::ListIdolCategory(idol_cat) => match respond_step_2(idol_cat, from).await {
             Ok(_) => Ok(()),
@@ -18,7 +20,7 @@ pub async fn handler_callback(cb: CallbackType, from: User) -> Result<()> {
 }
 
 /// Handler for all text messages.
-pub async fn handler_text(data: &str, msg: &Message) -> Result<()> {
+pub(crate) async fn handler_text(data: &str, msg: &Message) -> Result<()> {
     let data = data.trim();
     if data.starts_with("/ping") {
         respond_text("Hi!", &msg.chat).await?;

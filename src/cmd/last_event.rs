@@ -6,7 +6,7 @@ use worker::Result;
 /// ## /last_event
 ///
 /// This command is used to display the latest event (not necessarily active).
-pub async fn handler(_: &str, msg: &Message) -> Result<bool> {
+pub(crate) async fn handler(_: &str, msg: &Message) -> Result<bool> {
     let ret = get_events().await?;
     if ret.is_empty() {
         respond_text("No events found", &msg.chat).await?;

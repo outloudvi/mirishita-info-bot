@@ -6,7 +6,7 @@ use worker::Result;
 /// ## /curr_borders
 ///
 /// This command is used to display the score metrics for current event.
-pub async fn handler(_: &str, msg: &Message) -> Result<bool> {
+pub(crate) async fn handler(_: &str, msg: &Message) -> Result<bool> {
     let mut curr_event_ids = get_current_event_ids().await?;
     if curr_event_ids.is_empty() {
         respond_text("No current event!", &msg.chat).await?;

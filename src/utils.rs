@@ -2,8 +2,7 @@
 use cfg_if::cfg_if;
 use telegram_bot_raw::HttpRequest;
 use worker::wasm_bindgen::JsValue;
-use worker::Request as WRequest;
-use worker::*;
+use worker::{Request as WRequest, *};
 
 use crate::constants::BOT_TOKEN;
 
@@ -18,8 +17,8 @@ cfg_if! {
     }
 }
 
-/// Convert [`HttpRequest`](telegram_bot_raw::requests::_base::http::HttpRequest)
-/// to worker's [`Request`](worker::request).
+/// Convert [`HttpRequest`](telegram_bot_raw::requests::_base::http::
+/// HttpRequest) to worker's [`Request`](worker::request).
 pub fn to_workers_request(one: HttpRequest) -> Result<WRequest> {
     let bot_token = BOT_TOKEN.to_string();
     match one.body {
@@ -44,7 +43,8 @@ pub fn to_workers_request(one: HttpRequest) -> Result<WRequest> {
     }
 }
 
-/// Send a request finalized with `telegram_bot_raw`'s [`HttpRequest`](telegram_bot_raw::requests::_base::HttpRequest).
+/// Send a request finalized with `telegram_bot_raw`'s
+/// [`HttpRequest`](telegram_bot_raw::requests::_base::HttpRequest).
 pub async fn send_request(body: HttpRequest) -> Result<()> {
     let req = to_workers_request(body)?;
     let _resp = Fetch::Request(req).send().await?.text().await?;
