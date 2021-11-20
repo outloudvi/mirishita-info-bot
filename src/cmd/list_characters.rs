@@ -21,7 +21,7 @@ lazy_static! {
         m.insert(IdolCategory::NamukoPro, vec![1,2,3,4,5,6,7,8,9,10,11,12,13]);
         m.insert(IdolCategory::PrincessStars, vec![14,17,19,21,26,27,28,29,30,32,36,37,43]);
         m.insert(IdolCategory::FairyStars, vec![15,20,25,31,33,34,38,44,46,47,49,50,51]);
-        m.insert(IdolCategory::AngelStars, vec![16,18,22,23,24,32,35,39,40,41,42,45,48,52]);
+        m.insert(IdolCategory::AngelStars, vec![16,18,22,23,24,35,39,40,41,42,45,48,52]);
         m
     };
 
