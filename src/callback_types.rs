@@ -26,5 +26,12 @@ pub(crate) enum CallbackType {
 
     /// Indicating a card.
     #[serde(rename = "IC")]
-    IdolCard(u32),
+    IdolCard {
+        #[serde(rename = "c")]
+        card_id: u32,
+        #[serde(rename = "a")]
+        with_annotation: bool,
+        #[serde(rename = "p")]
+        with_plus: bool,
+    },
 }

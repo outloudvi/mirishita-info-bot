@@ -4,14 +4,14 @@ use lazy_static::lazy_static;
 use serde::Serialize;
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use telegram_bot_raw::{
-    EditMessageText, InlineKeyboardButton, InlineKeyboardMarkup, Message, ReplyMarkup, SendMessage,
-    User,
+    ChatId, EditMessageText, InlineKeyboardButton, InlineKeyboardMarkup, Message, ReplyMarkup,
+    SendMessage, User,
 };
 use worker::{console_log, Result};
 
 use crate::callback_types::CallbackType;
 use crate::constants::{IDOL_ID_MAP, PAGE_SIZE};
-use crate::matsurihi::get_idol_cards;
+use crate::matsurihi::{get_card, get_card_url, get_idol_cards};
 use crate::telegram::respond_raw;
 use crate::MessageIdentifier;
 
@@ -121,19 +121,6 @@ pub(crate) async fn respond_step_2(idol_category: IdolCategory, from: User) -> R
     Ok(true)
 }
 
-/// This exists because
-/// [`telegram_bot_raw::requests::edit_message_reply_markup::
-/// EditMessageReplyMarkup`] is not up to date. We need to only indicate
-/// inline_message_id, while this property just does not exist there.
-///
-/// https://core.telegram.org/bots/api#editmessagereplymarkup
-#[derive(Serialize)]
-pub(crate) struct OurEditMessageReplyMarkup {
-    inline_message_id: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    reply_markup: Option<ReplyMarkup>,
-}
-
 /// Callback for /list_characters.
 ///
 /// This shall be the step 3 (card selection) of /list_characters.
@@ -158,7 +145,12 @@ pub(crate) async fn respond_step_3(
             .map(|x| {
                 vec![InlineKeyboardButton::callback(
                     &format!("{} [{}]", x.name, x.rarity.to_string()),
-                    serde_json::to_string(&CallbackType::IdolCard(x.id)).unwrap(),
+                    serde_json::to_string(&CallbackType::IdolCard {
+                        card_id: x.id,
+                        with_annotation: true,
+                        with_plus: true,
+                    })
+                    .unwrap(),
                 )]
             })
             .fold(InlineKeyboardMarkup::new(), |mut kbd, ikb| {
@@ -203,19 +195,120 @@ pub(crate) async fn respond_step_3(
             page_id,
             (len as f32 / PAGE_SIZE as f32).ceil() as usize
         );
-        let reply_json = match chat {
+        match chat {
             Some(msg) => {
                 let mut m = EditMessageText::new(msg.chat, msg.id, title);
                 m.reply_markup(kbmarkup);
-                serde_json::to_string(&m)?
+                respond_raw("editMessageText", &serde_json::to_string(&m)?).await?;
             }
             None => {
                 let mut m = SendMessage::new(from, title);
                 m.reply_markup(kbmarkup);
-                serde_json::to_string(&m)?
+                respond_raw("sendMessage", &serde_json::to_string(&m)?).await?;
             }
         };
-        respond_raw("editMessageText", &reply_json).await?;
     }
+    Ok(true)
+}
+
+#[derive(Serialize)]
+pub(crate) struct SendPhotoItem {
+    chat_id: ChatId,
+    photo: String,
+    caption: Option<String>,
+    reply_markup: Option<ReplyMarkup>,
+}
+
+#[derive(Serialize)]
+pub(crate) struct InputMedia {
+    /// Must be "photo"
+    #[serde(rename = "type")]
+    typ: String,
+    media: String,
+    caption: Option<String>,
+}
+
+#[derive(Serialize)]
+pub(crate) struct EditMessageMedia {
+    chat_id: String,
+    message_id: String,
+    media: InputMedia,
+    reply_markup: Option<ReplyMarkup>,
+}
+
+/// Callback for /list_characters.
+///
+/// This shall be the step 4 (card display) of /list_characters.
+pub(crate) async fn respond_step_4(
+    card_id: u32,
+    with_annotation: bool,
+    with_plus: bool,
+    chat: Option<MessageIdentifier>,
+    from: User,
+) -> Result<bool> {
+    let card = get_card(card_id).await?;
+
+    let mut kbmarkup = InlineKeyboardMarkup::new();
+    let mut kbvec = vec![];
+
+    // Plus or Plusless
+    kbvec.push(InlineKeyboardButton::callback(
+        format!("Toggle {}/{}+", card.rarity, card.rarity),
+        serde_json::to_string(&CallbackType::IdolCard {
+            card_id,
+            with_annotation,
+            with_plus: !with_plus,
+        })
+        .unwrap(),
+    ));
+
+    // Annotation / Annotationless
+    kbvec.push(InlineKeyboardButton::callback(
+        "Toggle annotation".to_string(),
+        serde_json::to_string(&CallbackType::IdolCard {
+            card_id,
+            with_annotation: !with_annotation,
+            with_plus,
+        })
+        .unwrap(),
+    ));
+
+    kbmarkup.add_row(kbvec);
+
+    let card_url = get_card_url(&card.resource_id, with_plus, with_annotation);
+    let caption = Some(format!(
+        "{} [{}{}]",
+        card.name,
+        card.rarity,
+        if with_plus { "+" } else { "" }
+    ));
+
+    match chat {
+        Some(msg) => {
+            // let mut m = EditMessageText::new(msg.chat, msg.id, title);
+            // m.reply_markup(kbmarkup);
+            let m = EditMessageMedia {
+                chat_id: msg.chat.to_string(),
+                message_id: msg.id.to_string(),
+                media: InputMedia {
+                    typ: "photo".to_string(),
+                    media: card_url,
+                    caption,
+                },
+                reply_markup: Some(kbmarkup.into()),
+            };
+            respond_raw("editMessageMedia", &serde_json::to_string(&m)?).await?;
+        }
+        None => {
+            let photo = SendPhotoItem {
+                chat_id: from.id.into(),
+                photo: card_url,
+                caption,
+                reply_markup: Some(kbmarkup.into()),
+            };
+            respond_raw("sendPhoto", &serde_json::to_string(&photo)?).await?;
+        }
+    };
+
     Ok(true)
 }

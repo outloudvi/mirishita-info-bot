@@ -5,7 +5,7 @@ use std::fmt::Display;
 
 use chrono::{DateTime, Utc};
 use serde::Deserialize;
-use serde_repr::Deserialize_repr;
+use serde_repr::{Deserialize_repr, Serialize_repr};
 use strum_macros::Display;
 use worker::*;
 
@@ -50,7 +50,7 @@ pub struct CenterEffectItem {
     value2: Option<u32>,
 }
 
-#[derive(Deserialize_repr, Display)]
+#[derive(Serialize_repr, Deserialize_repr, Display)]
 #[repr(u8)]
 pub enum Rarity {
     N = 1,

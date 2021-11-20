@@ -1,12 +1,11 @@
 //! Various handlers.
 
-use telegram_bot_raw::{Message, MessageChat, User};
+use telegram_bot_raw::{Message, User};
 use worker::Result;
 
 use crate::callback_types::CallbackType;
-use crate::cmd::list_characters::{respond_step_2, respond_step_3};
-use crate::matsurihi::{get_card, get_card_url};
-use crate::telegram::{respond_img, respond_text};
+use crate::cmd::list_characters::{respond_step_2, respond_step_3, respond_step_4};
+use crate::telegram::respond_text;
 use crate::{cmd, MessageIdentifier};
 
 /// Handler for all callback items.
@@ -26,16 +25,14 @@ pub(crate) async fn handler_callback(
                 Err(e) => Err(e),
             }
         }
-        CallbackType::IdolCard(card_id) => {
-            let card = get_card(card_id).await?;
-            respond_img(
-                &get_card_url(&card.resource_id, true, true),
-                &card.name,
-                &MessageChat::Private(from),
-            )
-            .await?;
-            return Ok(());
-        }
+        CallbackType::IdolCard {
+            card_id,
+            with_annotation,
+            with_plus,
+        } => match respond_step_4(card_id, with_annotation, with_plus, chat, from).await {
+            Ok(_) => Ok(()),
+            Err(e) => Err(e),
+        },
     }
 }
 

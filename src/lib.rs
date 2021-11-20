@@ -12,8 +12,7 @@
 //!
 //! For bot command documentaion, see [`cmd`].
 
-use callback_types::CallbackType;
-use telegram::respond_callback_query;
+use telegram::{respond_callback_query, respond_text};
 use telegram_bot_raw::{ChatRef, MessageId, ToChatRef, Update};
 use worker::{
     console_log, event, wasm_bindgen, wasm_bindgen_futures, worker_sys, Request as WRequest, Result,
@@ -52,10 +51,25 @@ async fn handle_callback(cb_raw: telegram_bot_raw::CallbackQuery) -> Result<()> 
         // No data, skipping
         return Ok(());
     }
-    let callback: CallbackType =
-        serde_json::from_str(&cb_raw.data.unwrap()).map_err(|e| e.to_string())?;
+    let callback_result = serde_json::from_str(&cb_raw.data.unwrap()).map_err(|e| e.to_string());
+    if let Err(_) = callback_result {
+        let chat = cb_raw.message.and_then(|x| match x {
+            telegram_bot_raw::MessageOrChannelPost::Message(m) => Some(m.chat),
+            telegram_bot_raw::MessageOrChannelPost::ChannelPost(_) => None,
+        });
+        if let None = chat {
+            // Bad data & nowhere to notify
+            return Ok(());
+        }
+        respond_text(
+            "Message data expired. Please try using the commands.",
+            &chat.unwrap(),
+        )
+        .await?;
+        return Ok(());
+    }
     handler::handler_callback(
-        callback,
+        callback_result.unwrap(),
         cb_raw.message.and_then(|x| match x {
             telegram_bot_raw::MessageOrChannelPost::Message(m) => Some(MessageIdentifier {
                 id: m.id,
