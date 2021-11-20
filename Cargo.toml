@@ -18,6 +18,8 @@ lazy_static = "1.4.0"
 paste = "1.0"
 serde_json = "1.0.69"
 serde_repr = "0.1.7"
+strum = "0.23"
+strum_macros = "0.23"
 telegram-bot-raw = "0.8.0"
 worker = "0.0.7"
 # The `console_error_panic_hook` crate provides better debugging of panics by

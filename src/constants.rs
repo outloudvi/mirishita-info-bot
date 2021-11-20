@@ -66,9 +66,7 @@ lazy_static! {
         m.insert(52, "桜守歌織");
         m
     };
-}
 
-lazy_static! {
     /// Event types.
     ///
     /// Check <https://api.matsurihi.me/docs/#mltd-v1-events>.

@@ -5,6 +5,8 @@ use std::fmt::Display;
 
 use chrono::{DateTime, Utc};
 use serde::Deserialize;
+use serde_repr::Deserialize_repr;
+use strum_macros::Display;
 use worker::*;
 
 #[derive(Deserialize)]
@@ -48,6 +50,15 @@ pub struct CenterEffectItem {
     value2: Option<u32>,
 }
 
+#[derive(Deserialize_repr, Display)]
+#[repr(u8)]
+pub enum Rarity {
+    N = 1,
+    R = 2,
+    SR = 3,
+    SSR = 4,
+}
+
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[allow(dead_code)]
@@ -56,7 +67,7 @@ pub struct CardItem {
     pub name: String,
     idol_id: u32,
     pub resource_id: String,
-    rarity: u8,
+    pub rarity: Rarity,
     event_id: Option<u32>,
     category: String,
     extra_type: u32,
