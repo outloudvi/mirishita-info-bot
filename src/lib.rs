@@ -14,7 +14,7 @@
 
 use callback_types::CallbackType;
 use telegram::respond_callback_query;
-use telegram_bot_raw::Update;
+use telegram_bot_raw::{ChatRef, MessageId, ToChatRef, Update};
 use worker::{
     console_log, event, wasm_bindgen, wasm_bindgen_futures, worker_sys, Request as WRequest, Result,
 };
@@ -26,6 +26,11 @@ pub(crate) mod handler;
 pub mod matsurihi;
 pub mod telegram;
 pub mod utils;
+
+pub(crate) struct MessageIdentifier {
+    id: MessageId,
+    chat: ChatRef,
+}
 
 /// The message handler.
 async fn handle_message(msg: telegram_bot_raw::Message) -> Result<()> {
@@ -48,8 +53,19 @@ async fn handle_callback(cb_raw: telegram_bot_raw::CallbackQuery) -> Result<()> 
         return Ok(());
     }
     let callback: CallbackType =
-        bincode::deserialize(cb_raw.data.unwrap().as_bytes()).map_err(|e| e.to_string())?;
-    handler::handler_callback(callback, cb_raw.from).await?;
+        serde_json::from_str(&cb_raw.data.unwrap()).map_err(|e| e.to_string())?;
+    handler::handler_callback(
+        callback,
+        cb_raw.message.and_then(|x| match x {
+            telegram_bot_raw::MessageOrChannelPost::Message(m) => Some(MessageIdentifier {
+                id: m.id,
+                chat: m.chat.to_chat_ref(),
+            }),
+            telegram_bot_raw::MessageOrChannelPost::ChannelPost(_) => None,
+        }),
+        cb_raw.from,
+    )
+    .await?;
     return Ok(());
 }
 
@@ -67,18 +83,18 @@ pub async fn main(req: WRequest, env: worker::Env) -> worker::Result<worker::Res
             match tg_req.kind {
                 telegram_bot_raw::UpdateKind::Message(msg) => {
                     if let Err(x) = handle_message(msg).await {
-                        console_log!("Err: {}", x);
+                        console_log!("Message handling error: {}", x);
                     }
                 }
                 telegram_bot_raw::UpdateKind::CallbackQuery(cb) => {
                     if let Err(x) = handle_callback(cb.clone()).await {
-                        console_log!("Err: {}", x);
+                        console_log!("Callback handling error: {}", x);
                     } else {
                         respond_callback_query(&cb).await?;
                     }
                 }
                 _ => {}
-            }
+            };
             Response::ok("ok")
         })
         .run(req, env)

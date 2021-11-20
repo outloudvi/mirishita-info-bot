@@ -92,5 +92,7 @@ lazy_static! {
     };
 }
 
+pub(crate) const PAGE_SIZE: usize = 8;
+
 /// The BOT_TOKEN for the bot. Should be defined in `conf/BOT_TOKEN`.
-pub const BOT_TOKEN: &str = include_str!("../conf/BOT_TOKEN");
+pub(crate) const BOT_TOKEN: &str = include_str!("../conf/BOT_TOKEN");

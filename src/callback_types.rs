@@ -17,5 +17,14 @@ pub(crate) enum CallbackType {
 
     /// Listing cards for an idol.
     #[serde(rename = "LI")]
-    ListIdol(u32),
+    ListIdol {
+        #[serde(rename = "i")]
+        idol_id: u32,
+        #[serde(rename = "p")]
+        page_id: u32,
+    },
+
+    /// Indicating a card.
+    #[serde(rename = "IC")]
+    IdolCard(u32),
 }

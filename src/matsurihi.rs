@@ -52,7 +52,7 @@ pub struct CenterEffectItem {
 #[serde(rename_all = "camelCase")]
 #[allow(dead_code)]
 pub struct CardItem {
-    id: u32,
+    pub id: u32,
     pub name: String,
     idol_id: u32,
     pub resource_id: String,
@@ -72,7 +72,7 @@ pub struct CardItem {
     skill: Option<Vec<SkillItem>>,
     // Different from docs
     skill_name: String,
-    add_date: DateTime<Utc>,
+    add_date: Option<DateTime<Utc>>,
 }
 
 #[derive(Deserialize)]
@@ -137,18 +137,20 @@ impl Display for Event {
 
 /// Get all events.
 pub async fn get_events() -> Result<Vec<Event>> {
-    let ret = Fetch::Url(Url::parse("https://api.matsurihi.me/mltd/v1/events")?)
-        .send()
-        .await?
-        .json::<Vec<Event>>()
-        .await?;
+    let ret = Fetch::Url(Url::parse(
+        "https://api.matsurihi.me/mltd/v1/events?prettyPrint=false",
+    )?)
+    .send()
+    .await?
+    .json::<Vec<Event>>()
+    .await?;
     Ok(ret)
 }
 
 /// Get an event by its ID.
 pub async fn get_event(event_id: u32) -> Result<Event> {
     let ret = Fetch::Url(Url::parse(&format!(
-        "https://api.matsurihi.me/mltd/v1/events/{}",
+        "https://api.matsurihi.me/mltd/v1/events/{}?prettyPrint=false",
         event_id
     ))?)
     .send()
@@ -161,7 +163,7 @@ pub async fn get_event(event_id: u32) -> Result<Event> {
 /// Get the metrics for an event by its ID.
 pub async fn get_event_borders(event_id: u32) -> Result<EventBorderView> {
     let ret = Fetch::Url(Url::parse(&format!(
-        "https://api.matsurihi.me/mltd/v1/events/{}/rankings/borderPoints",
+        "https://api.matsurihi.me/mltd/v1/events/{}/rankings/borderPoints?prettyPrint=false",
         event_id
     ))?)
     .send()
@@ -208,7 +210,7 @@ pub fn get_card_bg_url(card_res_id: &str, plus: bool) -> String {
 /// Get the metadata for a card.
 pub async fn get_card(card_id: u32) -> Result<CardItem> {
     let mut ret = Fetch::Url(Url::parse(&format!(
-        "https://api.matsurihi.me/mltd/v1/cards/{}",
+        "https://api.matsurihi.me/mltd/v1/cards/{}?prettyPrint=false",
         card_id
     ))?)
     .send()
@@ -220,4 +222,17 @@ pub async fn get_card(card_id: u32) -> Result<CardItem> {
     } else {
         Ok(ret.remove(0))
     }
+}
+
+/// Get cards for an idol.
+pub async fn get_idol_cards(idol_id: u32) -> Result<Vec<CardItem>> {
+    let ret = Fetch::Url(Url::parse(&format!(
+        "https://api.matsurihi.me/mltd/v1/cards?prettyPrint=false&idolId={}",
+        idol_id
+    ))?)
+    .send()
+    .await?
+    .json::<Vec<CardItem>>()
+    .await?;
+    Ok(ret)
 }

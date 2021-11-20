@@ -47,14 +47,12 @@ pub fn to_workers_request(one: HttpRequest) -> Result<WRequest> {
 /// [`HttpRequest`](telegram_bot_raw::requests::_base::HttpRequest).
 pub async fn send_request(body: HttpRequest) -> Result<()> {
     let req = to_workers_request(body)?;
-    let _resp = Fetch::Request(req).send().await?.text().await?;
-    console_log!("Returns: {}", _resp);
+    Fetch::Request(req).send().await?.text().await?;
     Ok(())
 }
 
 /// Send a raw request finalized with [`wasm_bindgen::JsValue`].
 pub async fn send_raw_request(url: &str, body: JsValue) -> Result<()> {
-    console_log!("{:?}", body);
     let mut hds = Headers::new();
     hds.set("Content-Type", "application/json")?;
     let init = RequestInit {
@@ -67,8 +65,7 @@ pub async fn send_raw_request(url: &str, body: JsValue) -> Result<()> {
 
     let req = WRequest::new_with_init(url, &init)?;
 
-    let resp = Fetch::Request(req).send().await?.text().await?;
-    console_log!("{}", resp,);
+    Fetch::Request(req).send().await?.text().await?;
     Ok(())
 }
 
