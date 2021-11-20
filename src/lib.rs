@@ -12,56 +12,30 @@
 //!
 //! For bot command documentaion, see [`cmd`].
 
-use crate::telegram::respond_text;
 use telegram_bot_raw::Update;
 use worker::Request as WRequest;
 use worker::*;
 
+pub mod callback_types;
 pub mod cmd;
 pub mod constants;
+pub mod handler;
 pub mod matsurihi;
 pub mod telegram;
 pub mod utils;
 
 /// The message handler.
 async fn handle_message(msg: telegram_bot_raw::Message) -> Result<()> {
-    use telegram_bot_raw::MessageKind::Text;
+    use telegram_bot_raw::MessageKind::*;
 
-    if let Text { ref data, .. } = msg.kind {
-        let data = data.trim();
-        if data.starts_with("/ping") {
-            respond_text("Hi!", &msg.chat).await?;
+    match &msg.kind {
+        Text { data, .. } => {
+            return handler::handler_text(data, &msg).await;
+        }
+        _ => {
             return Ok(());
-        } else if data.starts_with("/last_event") {
-            let ret = cmd::handler__last_event(data, &msg).await?;
-            if !ret {
-                respond_text("Bad command usage", &msg.chat).await?;
-            }
-            return Ok(());
-        } else if data.starts_with("/curr_event") {
-            let ret = cmd::handler__curr_event(data, &msg).await?;
-            if !ret {
-                respond_text("Bad command usage", &msg.chat).await?;
-            }
-            return Ok(());
-        } else if data.starts_with("/curr_borders") {
-            let ret = cmd::handler__curr_borders(data, &msg).await?;
-            if !ret {
-                respond_text("Bad command usage", &msg.chat).await?;
-            }
-            return Ok(());
-        } else if data.starts_with("/card") {
-            let ret = cmd::handler__card(data, &msg).await?;
-            if !ret {
-                respond_text("Bad command usage", &msg.chat).await?;
-            }
-            return Ok(());
-        } else {
-            respond_text(&format!("Command not found: {}", data), &msg.chat).await?;
         }
     }
-
-    Ok(())
 }
 
 #[event(fetch)]
@@ -72,10 +46,21 @@ pub async fn main(req: WRequest, env: Env) -> worker::Result<Response> {
     router
         .post_async("/1b248948646a", |mut req, _| async move {
             let tg_req = req.json::<Update>().await?;
-            if let telegram_bot_raw::UpdateKind::Message(msg) = tg_req.kind {
-                if let Err(x) = handle_message(msg).await {
-                    console_log!("Err: {}", x);
+            match tg_req.kind {
+                telegram_bot_raw::UpdateKind::Message(msg) => {
+                    if let Err(x) = handle_message(msg).await {
+                        console_log!("Err: {}", x);
+                    }
                 }
+                telegram_bot_raw::UpdateKind::EditedMessage(_) => todo!(),
+                telegram_bot_raw::UpdateKind::ChannelPost(_) => todo!(),
+                telegram_bot_raw::UpdateKind::EditedChannelPost(_) => todo!(),
+                telegram_bot_raw::UpdateKind::InlineQuery(_) => todo!(),
+                telegram_bot_raw::UpdateKind::CallbackQuery(_) => todo!(),
+                telegram_bot_raw::UpdateKind::Poll(_) => todo!(),
+                telegram_bot_raw::UpdateKind::PollAnswer(_) => todo!(),
+                telegram_bot_raw::UpdateKind::Error(_) => todo!(),
+                telegram_bot_raw::UpdateKind::Unknown => todo!(),
             }
             Response::ok("ok")
         })
