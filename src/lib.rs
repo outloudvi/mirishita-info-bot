@@ -36,28 +36,24 @@ async fn handle_message(msg: telegram_bot_raw::Message) -> Result<()> {
     use telegram_bot_raw::MessageKind::*;
 
     match &msg.kind {
-        Text { data, .. } => {
-            return handler::handler_text(data, &msg).await;
-        }
-        _ => {
-            return Ok(());
-        }
+        Text { data, .. } => handler::handler_text(data, &msg).await,
+        _ => Ok(()),
     }
 }
 
 /// The callbackQuery handler.
 async fn handle_callback(cb_raw: telegram_bot_raw::CallbackQuery) -> Result<()> {
-    if let None = cb_raw.data {
+    if cb_raw.data.is_none() {
         // No data, skipping
         return Ok(());
     }
     let callback_result = serde_json::from_str(&cb_raw.data.unwrap()).map_err(|e| e.to_string());
-    if let Err(_) = callback_result {
+    if callback_result.is_err() {
         let chat = cb_raw.message.and_then(|x| match x {
             telegram_bot_raw::MessageOrChannelPost::Message(m) => Some(m.chat),
             telegram_bot_raw::MessageOrChannelPost::ChannelPost(_) => None,
         });
-        if let None = chat {
+        if chat.is_none() {
             // Bad data & nowhere to notify
             return Ok(());
         }
@@ -80,7 +76,7 @@ async fn handle_callback(cb_raw: telegram_bot_raw::CallbackQuery) -> Result<()> 
         cb_raw.from,
     )
     .await?;
-    return Ok(());
+    Ok(())
 }
 
 /// The entrypoint to the script.

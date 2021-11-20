@@ -144,7 +144,7 @@ pub(crate) async fn respond_step_3(
             .take(PAGE_SIZE)
             .map(|x| {
                 vec![InlineKeyboardButton::callback(
-                    &format!("{} [{}]", x.name, x.rarity.to_string()),
+                    &format!("{} [{}]", x.name, x.rarity),
                     serde_json::to_string(&CallbackType::IdolCard {
                         card_id: x.id,
                         with_annotation: true,
