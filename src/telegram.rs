@@ -4,7 +4,7 @@ use std::ops::Not;
 use serde::Serialize;
 use telegram_bot_raw::{CallbackQueryId, Message, MessageChat, SendMessage};
 use worker::wasm_bindgen::JsValue;
-use worker::{console_log, Result};
+use worker::Result;
 
 use crate::constants::BOT_TOKEN;
 use crate::utils::{escape, send_raw_request, send_request};
@@ -69,11 +69,6 @@ pub async fn respond_callback_query(
 
 /// Send a raw response.
 pub async fn respond_raw(method: &str, body: &str) -> Result<()> {
-    console_log!(
-        "POST {}\nContent: {}",
-        format!("https://api.telegram.org/bot{}/{}", BOT_TOKEN, method),
-        body
-    );
     send_raw_request(
         &format!("https://api.telegram.org/bot{}/{}", BOT_TOKEN, method),
         JsValue::from_str(body),
@@ -82,8 +77,5 @@ pub async fn respond_raw(method: &str, body: &str) -> Result<()> {
 }
 
 pub(crate) fn can_edit_photo(msg: &Message) -> bool {
-    match msg.kind {
-        telegram_bot_raw::MessageKind::Photo { .. } => true,
-        _ => false,
-    }
+    matches!(msg.kind, telegram_bot_raw::MessageKind::Photo { .. })
 }

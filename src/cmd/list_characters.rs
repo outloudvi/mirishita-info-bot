@@ -7,7 +7,7 @@ use telegram_bot_raw::{
     ChatId, EditMessageText, InlineKeyboardButton, InlineKeyboardMarkup, Message, ReplyMarkup,
     SendMessage,
 };
-use worker::{console_log, Result};
+use worker::Result;
 
 use crate::callback_types::CallbackType;
 use crate::constants::{IDOL_ID_MAP, PAGE_SIZE};
@@ -196,7 +196,6 @@ pub(crate) async fn respond_step_3(
             .unwrap(),
         ));
 
-        console_log!("from {} ~ SIZE {} * len {}", page_from, PAGE_SIZE, len);
         if page_id as usize * PAGE_SIZE < len {
             pagination_row.push(InlineKeyboardButton::callback(
                 "Next".to_string(),
