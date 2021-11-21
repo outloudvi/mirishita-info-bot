@@ -71,7 +71,11 @@ pub(crate) async fn handler(_: &str, msg: &Message) -> Result<bool> {
     ] {
         let btn = InlineKeyboardButton::callback(
             IDOL_CATEGORY_NAMES.get(&i).unwrap(),
-            serde_json::to_string(&CallbackType::ListIdolCategory(i.clone())).unwrap(),
+            serde_json::to_string(&CallbackType::ListIdolCategory {
+                category: i.clone(),
+                force_new_msg: true,
+            })
+            .unwrap(),
         );
 
         kbmarkup.add_row(vec![btn]);
@@ -88,6 +92,7 @@ pub(crate) async fn handler(_: &str, msg: &Message) -> Result<bool> {
 /// This shall be the step 2 (character selection) of /list_characters.
 pub(crate) async fn respond_step_2(
     idol_category: IdolCategory,
+    force_new_msg: bool,
     msgid: MessageIdentifier,
 ) -> Result<bool> {
     if let Some(cat) = IDOL_CATEGORY_MAP.get(&idol_category) {
@@ -116,11 +121,18 @@ pub(crate) async fn respond_step_2(
             "You've selected: {}\nNow select an idol...",
             IDOL_CATEGORY_NAMES.get(&idol_category).unwrap()
         );
-        let mut reply_msg = SendMessage::new(&msgid.chat, &text);
-        reply_msg.reply_to(msgid.id);
-        reply_msg.reply_markup(kbmarkup);
-        let reply_msg = serde_json::to_string(&reply_msg)?;
-        respond_raw("sendMessage", &reply_msg).await?;
+
+        if force_new_msg {
+            let mut reply_msg = SendMessage::new(&msgid.chat, &text);
+            reply_msg.reply_to(&msgid.id);
+            reply_msg.reply_markup(kbmarkup);
+            let reply_msg = serde_json::to_string(&reply_msg)?;
+            respond_raw("sendMessage", &reply_msg).await?;
+        } else {
+            let mut m = EditMessageText::new(&msgid.chat, &msgid.id, &text);
+            m.reply_markup(kbmarkup);
+            respond_raw("editMessageText", &serde_json::to_string(&m)?).await?;
+        }
     }
     Ok(true)
 }
@@ -176,7 +188,12 @@ pub(crate) async fn respond_step_3(
         let idol_category = find_idol_category(&idol_id)?;
         pagination_row.push(InlineKeyboardButton::callback(
             "Up".to_string(),
-            serde_json::to_string(&CallbackType::ListIdolCategory(idol_category)).unwrap(),
+            serde_json::to_string(&CallbackType::ListIdolCategory {
+                category: idol_category,
+                // allow message reuse
+                force_new_msg: false,
+            })
+            .unwrap(),
         ));
 
         console_log!("from {} ~ SIZE {} * len {}", page_from, PAGE_SIZE, len);

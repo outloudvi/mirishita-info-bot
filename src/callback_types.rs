@@ -1,4 +1,5 @@
 //! Definitions for callbacks.
+use std::ops::Not;
 
 use serde::{Deserialize, Serialize};
 
@@ -13,7 +14,14 @@ pub(crate) enum CallbackType {
     /// Listing idols in a category.
     /// See [`crate::cmd::list_characters::respond_step_2`] for the logic.
     #[serde(rename = "LIC")]
-    ListIdolCategory(IdolCategory),
+    ListIdolCategory {
+        #[serde(rename = "c")]
+        category: IdolCategory,
+        #[serde(rename = "f")]
+        #[serde(skip_serializing_if = "Not::not")]
+        #[serde(default)]
+        force_new_msg: bool,
+    },
 
     /// Listing cards for an idol.
     #[serde(rename = "LI")]

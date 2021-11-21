@@ -16,7 +16,10 @@ pub(crate) async fn handler_callback(cb: CallbackType, om: Message) -> Result<()
     let msg_id = MessageIdentifier::from_message(&om);
     match cb {
         // Edit a message, w/o photo
-        CallbackType::ListIdolCategory(idol_cat) => match respond_step_2(idol_cat, msg_id).await {
+        CallbackType::ListIdolCategory {
+            category,
+            force_new_msg,
+        } => match respond_step_2(category, force_new_msg, msg_id).await {
             Ok(_) => Ok(()),
             Err(e) => Err(e),
         },
