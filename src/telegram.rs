@@ -1,6 +1,6 @@
 //! The part used to communicate with Telegram.
 use serde::Serialize;
-use telegram_bot_raw::{CallbackQuery, MessageChat, SendMessage, ToCallbackQueryId};
+use telegram_bot_raw::{CallbackQuery, CallbackQueryId, MessageChat, SendMessage};
 use worker::wasm_bindgen::JsValue;
 use worker::Result;
 
@@ -41,9 +41,16 @@ pub async fn respond_img(url: &str, caption: &str, chat: &MessageChat) -> Result
     .await
 }
 
+#[derive(Serialize)]
+pub struct AnswerCallbackQuery {
+    pub callback_query_id: CallbackQueryId,
+}
+
 /// Respond to callback queries.
 pub async fn respond_callback_query(query: &CallbackQuery) -> Result<()> {
-    let body = ToCallbackQueryId::to_callback_query_id(query);
+    let body = AnswerCallbackQuery {
+        callback_query_id: query.id.clone(),
+    };
     Ok(respond_raw("answerCallbackQuery", &serde_json::to_string(&body)?).await?)
 }
 
