@@ -5,7 +5,7 @@ use serde::Serialize;
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use telegram_bot_raw::{
     ChatId, EditMessageText, InlineKeyboardButton, InlineKeyboardMarkup, Message, ReplyMarkup,
-    SendMessage, User,
+    SendMessage,
 };
 use worker::{console_log, Result};
 
@@ -13,7 +13,7 @@ use crate::callback_types::CallbackType;
 use crate::constants::{IDOL_ID_MAP, PAGE_SIZE};
 use crate::matsurihi::{get_card, get_card_url, get_idol_cards};
 use crate::telegram::respond_raw;
-use crate::MessageIdentifier;
+use crate::types::MessageIdentifier;
 
 /// These are the categories of idols.
 #[derive(Clone, Hash, PartialEq, Eq, Serialize_repr, Deserialize_repr)]
@@ -86,7 +86,10 @@ pub(crate) async fn handler(_: &str, msg: &Message) -> Result<bool> {
 /// Callback for /list_characters.
 ///
 /// This shall be the step 2 (character selection) of /list_characters.
-pub(crate) async fn respond_step_2(idol_category: IdolCategory, from: User) -> Result<bool> {
+pub(crate) async fn respond_step_2(
+    idol_category: IdolCategory,
+    msgid: MessageIdentifier,
+) -> Result<bool> {
     if let Some(cat) = IDOL_CATEGORY_MAP.get(&idol_category) {
         let kbmarkup = cat
             .chunks(3)
@@ -113,7 +116,8 @@ pub(crate) async fn respond_step_2(idol_category: IdolCategory, from: User) -> R
             "You've selected: {}\nNow select an idol...",
             IDOL_CATEGORY_NAMES.get(&idol_category).unwrap()
         );
-        let mut reply_msg = SendMessage::new(&from, &text);
+        let mut reply_msg = SendMessage::new(&msgid.chat, &text);
+        reply_msg.reply_to(msgid.id);
         reply_msg.reply_markup(kbmarkup);
         let reply_msg = serde_json::to_string(&reply_msg)?;
         respond_raw("sendMessage", &reply_msg).await?;
@@ -127,8 +131,7 @@ pub(crate) async fn respond_step_2(idol_category: IdolCategory, from: User) -> R
 pub(crate) async fn respond_step_3(
     idol_id: u32,
     page_id: u32,
-    chat: Option<MessageIdentifier>,
-    from: User,
+    msgid: MessageIdentifier,
 ) -> Result<bool> {
     if page_id == 0 {
         return Err(worker::Error::RustError("Bad page_id".to_string()));
@@ -195,18 +198,10 @@ pub(crate) async fn respond_step_3(
             page_id,
             (len as f32 / PAGE_SIZE as f32).ceil() as usize
         );
-        match chat {
-            Some(msg) => {
-                let mut m = EditMessageText::new(msg.chat, msg.id, title);
-                m.reply_markup(kbmarkup);
-                respond_raw("editMessageText", &serde_json::to_string(&m)?).await?;
-            }
-            None => {
-                let mut m = SendMessage::new(from, title);
-                m.reply_markup(kbmarkup);
-                respond_raw("sendMessage", &serde_json::to_string(&m)?).await?;
-            }
-        };
+
+        let mut m = EditMessageText::new(msgid.chat, msgid.id, title);
+        m.reply_markup(kbmarkup);
+        respond_raw("editMessageText", &serde_json::to_string(&m)?).await?;
     }
     Ok(true)
 }
@@ -243,8 +238,8 @@ pub(crate) async fn respond_step_4(
     card_id: u32,
     with_annotation: bool,
     with_plus: bool,
-    chat: Option<MessageIdentifier>,
-    from: User,
+    msgid: MessageIdentifier,
+    photo_editable: bool,
 ) -> Result<bool> {
     let card = get_card(card_id).await?;
 
@@ -283,31 +278,28 @@ pub(crate) async fn respond_step_4(
         if with_plus { "+" } else { "" }
     ));
 
-    match chat {
-        Some(msg) => {
-            // let mut m = EditMessageText::new(msg.chat, msg.id, title);
-            // m.reply_markup(kbmarkup);
-            let m = EditMessageMedia {
-                chat_id: msg.chat.to_string(),
-                message_id: msg.id.to_string(),
-                media: InputMedia {
-                    typ: "photo".to_string(),
-                    media: card_url,
-                    caption,
-                },
-                reply_markup: Some(kbmarkup.into()),
-            };
-            respond_raw("editMessageMedia", &serde_json::to_string(&m)?).await?;
-        }
-        None => {
-            let photo = SendPhotoItem {
-                chat_id: from.id.into(),
-                photo: card_url,
+    if photo_editable {
+        // let mut m = EditMessageText::new(msg.chat, msg.id, title);
+        // m.reply_markup(kbmarkup);
+        let m = EditMessageMedia {
+            chat_id: msgid.chat.to_string(),
+            message_id: msgid.id.to_string(),
+            media: InputMedia {
+                typ: "photo".to_string(),
+                media: card_url,
                 caption,
-                reply_markup: Some(kbmarkup.into()),
-            };
-            respond_raw("sendPhoto", &serde_json::to_string(&photo)?).await?;
-        }
+            },
+            reply_markup: Some(kbmarkup.into()),
+        };
+        respond_raw("editMessageMedia", &serde_json::to_string(&m)?).await?;
+    } else {
+        let photo = SendPhotoItem {
+            chat_id: msgid.chat,
+            photo: card_url,
+            caption,
+            reply_markup: Some(kbmarkup.into()),
+        };
+        respond_raw("sendPhoto", &serde_json::to_string(&photo)?).await?;
     };
 
     Ok(true)

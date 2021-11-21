@@ -1,35 +1,46 @@
 //! Various handlers.
 
-use telegram_bot_raw::{Message, User};
+use telegram_bot_raw::Message;
 use worker::Result;
 
 use crate::callback_types::CallbackType;
+use crate::cmd;
 use crate::cmd::list_characters::{respond_step_2, respond_step_3, respond_step_4};
-use crate::telegram::respond_text;
-use crate::{cmd, MessageIdentifier};
+use crate::telegram::{can_edit_photo, respond_text};
+use crate::types::MessageIdentifier;
 
 /// Handler for all callback items.
-pub(crate) async fn handler_callback(
-    cb: CallbackType,
-    chat: Option<MessageIdentifier>,
-    from: User,
-) -> Result<()> {
+///
+/// @return Ok, or the error message.
+pub(crate) async fn handler_callback(cb: CallbackType, om: Message) -> Result<()> {
+    let msg_id = MessageIdentifier::from_message(&om);
     match cb {
-        CallbackType::ListIdolCategory(idol_cat) => match respond_step_2(idol_cat, from).await {
+        // Edit a message, w/o photo
+        CallbackType::ListIdolCategory(idol_cat) => match respond_step_2(idol_cat, msg_id).await {
             Ok(_) => Ok(()),
             Err(e) => Err(e),
         },
+        // Edit a message, w/o photo
         CallbackType::ListIdol { idol_id, page_id } => {
-            match respond_step_3(idol_id, page_id, chat, from).await {
+            match respond_step_3(idol_id, page_id, msg_id).await {
                 Ok(_) => Ok(()),
                 Err(e) => Err(e),
             }
         }
+        // Send a new message or edit a message, w/ photo
         CallbackType::IdolCard {
             card_id,
             with_annotation,
             with_plus,
-        } => match respond_step_4(card_id, with_annotation, with_plus, chat, from).await {
+        } => match respond_step_4(
+            card_id,
+            with_annotation,
+            with_plus,
+            msg_id,
+            can_edit_photo(&om),
+        )
+        .await
+        {
             Ok(_) => Ok(()),
             Err(e) => Err(e),
         },

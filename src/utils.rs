@@ -65,7 +65,10 @@ pub async fn send_raw_request(url: &str, body: JsValue) -> Result<()> {
 
     let req = WRequest::new_with_init(url, &init)?;
 
-    Fetch::Request(req).send().await?.text().await?;
+    let resp = Fetch::Request(req).send().await?.text().await?;
+
+    console_log!("Response: {}", resp);
+
     Ok(())
 }
 

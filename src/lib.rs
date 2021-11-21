@@ -12,8 +12,8 @@
 //!
 //! For bot command documentaion, see [`cmd`].
 
-use telegram::{respond_callback_query, respond_text};
-use telegram_bot_raw::{ChatRef, MessageId, ToChatRef, Update};
+use telegram::respond_callback_query;
+use telegram_bot_raw::Update;
 use worker::{
     console_log, event, wasm_bindgen, wasm_bindgen_futures, worker_sys, Request as WRequest, Result,
 };
@@ -24,12 +24,8 @@ pub mod constants;
 pub(crate) mod handler;
 pub mod matsurihi;
 pub mod telegram;
+pub(crate) mod types;
 pub mod utils;
-
-pub(crate) struct MessageIdentifier {
-    id: MessageId,
-    chat: ChatRef,
-}
 
 /// The message handler.
 async fn handle_message(msg: telegram_bot_raw::Message) -> Result<()> {
@@ -43,39 +39,59 @@ async fn handle_message(msg: telegram_bot_raw::Message) -> Result<()> {
 
 /// The callbackQuery handler.
 async fn handle_callback(cb_raw: telegram_bot_raw::CallbackQuery) -> Result<()> {
+    let query_id = cb_raw.id;
+
     if cb_raw.data.is_none() {
         // No data, skipping
         return Ok(());
     }
-    let callback_result = serde_json::from_str(&cb_raw.data.unwrap()).map_err(|e| e.to_string());
+
+    let callback_result =
+        serde_json::from_str(&cb_raw.data.clone().unwrap()).map_err(|e| e.to_string());
+
+    // If cannot decode callback...
     if callback_result.is_err() {
-        let chat = cb_raw.message.and_then(|x| match x {
-            telegram_bot_raw::MessageOrChannelPost::Message(m) => Some(m.chat),
-            telegram_bot_raw::MessageOrChannelPost::ChannelPost(_) => None,
-        });
-        if chat.is_none() {
-            // Bad data & nowhere to notify
-            return Ok(());
-        }
-        respond_text(
-            "Message data expired. Please try using the commands.",
-            &chat.unwrap(),
+        respond_callback_query(
+            query_id,
+            Some("Cannot extract intent. Please start again from the commands.".to_string()),
+            true,
         )
         .await?;
         return Ok(());
     }
-    handler::handler_callback(
-        callback_result.unwrap(),
-        cb_raw.message.and_then(|x| match x {
-            telegram_bot_raw::MessageOrChannelPost::Message(m) => Some(MessageIdentifier {
-                id: m.id,
-                chat: m.chat.to_chat_ref(),
-            }),
-            telegram_bot_raw::MessageOrChannelPost::ChannelPost(_) => None,
-        }),
-        cb_raw.from,
-    )
-    .await?;
+
+    // We need the original message (& chat) to reply
+    let maybe_original_message = match cb_raw.message {
+        Some(mocp) => {
+            if let telegram_bot_raw::MessageOrChannelPost::Message(m) = mocp {
+                Some(m)
+            } else {
+                None
+            }
+        }
+        None => None,
+    };
+
+    match maybe_original_message {
+        Some(om) => {
+            if let Err(e) = handler::handler_callback(callback_result.unwrap(), om).await {
+                // Have original message, but error somewhere inside
+                respond_callback_query(query_id, Some(e.to_string()), true).await?;
+            } else {
+                // Success
+                respond_callback_query(query_id, None, false).await?;
+            }
+        }
+        None => {
+            respond_callback_query(
+                query_id,
+                Some("Cannot find original message or chat.".to_string()),
+                false,
+            )
+            .await?;
+        }
+    };
+
     Ok(())
 }
 
@@ -99,8 +115,6 @@ pub async fn main(req: WRequest, env: worker::Env) -> worker::Result<worker::Res
                 telegram_bot_raw::UpdateKind::CallbackQuery(cb) => {
                     if let Err(x) = handle_callback(cb.clone()).await {
                         console_log!("Callback handling error: {}", x);
-                    } else {
-                        respond_callback_query(&cb).await?;
                     }
                 }
                 _ => {}

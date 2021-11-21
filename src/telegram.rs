@@ -1,8 +1,10 @@
 //! The part used to communicate with Telegram.
+use std::ops::Not;
+
 use serde::Serialize;
-use telegram_bot_raw::{CallbackQuery, CallbackQueryId, MessageChat, SendMessage};
+use telegram_bot_raw::{CallbackQueryId, Message, MessageChat, SendMessage};
 use worker::wasm_bindgen::JsValue;
-use worker::Result;
+use worker::{console_log, Result};
 
 use crate::constants::BOT_TOKEN;
 use crate::utils::{escape, send_raw_request, send_request};
@@ -41,24 +43,47 @@ pub async fn respond_img(url: &str, caption: &str, chat: &MessageChat) -> Result
     .await
 }
 
+/// <https://docs.rs/telegram-bot-raw/0.8.0/src/telegram_bot_raw/requests/answer_callback_query.rs.html#7>
 #[derive(Serialize)]
 pub struct AnswerCallbackQuery {
-    pub callback_query_id: CallbackQueryId,
+    callback_query_id: CallbackQueryId,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    text: Option<String>,
+    #[serde(skip_serializing_if = "Not::not")]
+    show_alert: bool,
 }
 
 /// Respond to callback queries.
-pub async fn respond_callback_query(query: &CallbackQuery) -> Result<()> {
+pub async fn respond_callback_query(
+    query: CallbackQueryId,
+    text: Option<String>,
+    show_alert: bool,
+) -> Result<()> {
     let body = AnswerCallbackQuery {
-        callback_query_id: query.id.clone(),
+        callback_query_id: query,
+        text,
+        show_alert,
     };
     Ok(respond_raw("answerCallbackQuery", &serde_json::to_string(&body)?).await?)
 }
 
 /// Send a raw response.
 pub async fn respond_raw(method: &str, body: &str) -> Result<()> {
+    console_log!(
+        "POST {}\nContent: {}",
+        format!("https://api.telegram.org/bot{}/{}", BOT_TOKEN, method),
+        body
+    );
     send_raw_request(
         &format!("https://api.telegram.org/bot{}/{}", BOT_TOKEN, method),
         JsValue::from_str(body),
     )
     .await
+}
+
+pub(crate) fn can_edit_photo(msg: &Message) -> bool {
+    match msg.kind {
+        telegram_bot_raw::MessageKind::Photo { .. } => true,
+        _ => false,
+    }
 }
