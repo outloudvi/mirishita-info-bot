@@ -1,8 +1,11 @@
-use crate::constants::IDOL_ID_MAP;
-use crate::matsurihi::get_card;
-use crate::{matsurihi::get_card_url, telegram::respond_img};
 use telegram_bot_raw::Message;
 use worker::Result;
+
+use super::list_characters::respond_step_4;
+use crate::constants::IDOL_ID_MAP;
+use crate::matsurihi::get_card_url;
+use crate::telegram::respond_img;
+use crate::types::MessageIdentifier;
 
 /// ## /card
 ///
@@ -22,14 +25,7 @@ pub(crate) async fn handler(command: &str, msg: &Message) -> Result<bool> {
 
     // /card [id]
     if let Ok(id) = target.parse::<u32>() {
-        let card = get_card(id).await?;
-        respond_img(
-            &get_card_url(&card.resource_id, true, true),
-            &card.name,
-            &msg.chat,
-        )
-        .await?;
-        return Ok(true);
+        return respond_step_4(id, true, true, MessageIdentifier::from_message(msg), false).await;
     }
 
     for (_k, v) in IDOL_ID_MAP.iter() {

@@ -289,11 +289,11 @@ pub(crate) async fn respond_step_4(
 
     let card_url = get_card_url(&card.resource_id, with_plus, with_annotation);
     let caption = Some(format!(
-        "{} [{}{}]\nUse \"/card {}\" to check the card",
+        "{} [{}{}]\n(Use \"/card {}\" to check the card)",
         card.name,
         card.rarity,
         if with_plus { "+" } else { "" },
-        card.resource_id
+        card_id
     ));
 
     if photo_editable {
