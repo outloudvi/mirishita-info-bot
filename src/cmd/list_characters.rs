@@ -82,6 +82,7 @@ pub(crate) async fn handler(_: &str, msg: &Message) -> Result<bool> {
     }
     let mut reply_msg = SendMessage::new(&msg.chat, "Select a group...");
     reply_msg.reply_markup(kbmarkup);
+    reply_msg.reply_to(msg);
     let reply_msg = serde_json::to_string(&reply_msg)?;
     respond_raw("sendMessage", &reply_msg).await?;
     Ok(true)
