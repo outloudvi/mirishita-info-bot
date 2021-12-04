@@ -28,7 +28,7 @@ pub(crate) async fn send_curr_event_data(with_border: bool, msg: &Message) -> Re
                 ret += &format!("Rank #{}: {}\n", k.rank, k.score.unwrap().round());
             }
         }
-        ret += &format!("Participants: {}", metrics.event_point.count);
+        ret += &format!("Participants: {}\n", metrics.event_point.count);
         if !with_border {
             ret += "<i>For score borders, use /curr_borders</i>";
         }
