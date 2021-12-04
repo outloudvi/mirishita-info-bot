@@ -16,17 +16,13 @@ pub(crate) async fn handler(_: &str, msg: &Message) -> Result<bool> {
         let curr_event_id = curr_event_ids.last().unwrap();
         let event_info = get_event(*curr_event_id).await?;
         let metrics = get_event_borders(*curr_event_id).await?;
-        let mut ret = format!("**{}**\n", event_info.name);
-        for k in metrics.event_point.scores {
-            if k.score.is_none() {
-                break;
-            }
-            ret += &format!("Rank #{}: {}\n", k.rank, k.score.unwrap().round());
-        }
-        ret += &format!("Participants: {}", metrics.event_point.count);
+        let mut ret = format!("<b>{}</b>\n", event_info.name);
+        ret += &format!("Participants: {}\n", metrics.event_point.count);
+        ret += "<i>For score borders, use /curr_borders</i>";
         ret
     };
     let mut reply_msg = SendMessage::new(&msg.chat, text);
+    reply_msg.parse_mode(telegram_bot_raw::ParseMode::Html);
     reply_msg.reply_to(msg);
     let reply_msg = serde_json::to_string(&reply_msg)?;
     respond_raw("sendMessage", &reply_msg).await?;

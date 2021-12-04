@@ -96,8 +96,7 @@ pub struct ScoreItem {
 #[serde(rename_all = "camelCase")]
 pub struct PointMetrics {
     pub scores: Vec<ScoreItem>,
-    #[allow(dead_code)]
-    summary_time: DateTime<Utc>,
+    pub summary_time: DateTime<Utc>,
     pub count: u32,
 }
 
