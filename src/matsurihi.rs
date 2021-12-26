@@ -50,7 +50,7 @@ pub struct CenterEffectItem {
     value2: Option<u32>,
 }
 
-#[derive(Serialize_repr, Deserialize_repr, Display)]
+#[derive(PartialEq, Serialize_repr, Deserialize_repr, Display)]
 #[repr(u8)]
 pub enum Rarity {
     N = 1,

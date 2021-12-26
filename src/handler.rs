@@ -35,10 +35,12 @@ pub(crate) async fn handler_callback(cb: CallbackType, om: Message) -> Result<()
             card_id,
             with_annotation,
             with_plus,
+            bg,
         } => match respond_step_4(
             card_id,
             with_annotation,
             with_plus,
+            bg,
             msg_id,
             can_edit_photo(&om),
         )

@@ -9,9 +9,9 @@ use telegram_bot_raw::{
 };
 use worker::Result;
 
-use crate::callback_types::CallbackType;
+use crate::callback_types::{BgStatus, CallbackType};
 use crate::constants::{IDOL_ID_MAP, PAGE_SIZE};
-use crate::matsurihi::{get_card, get_card_url, get_idol_cards};
+use crate::matsurihi::{get_card, get_card_bg_url, get_card_url, get_idol_cards, Rarity};
 use crate::telegram::respond_raw;
 use crate::types::MessageIdentifier;
 
@@ -165,6 +165,14 @@ pub(crate) async fn respond_step_3(
                         card_id: x.id,
                         with_annotation: true,
                         with_plus: true,
+                        bg: if x.rarity == Rarity::SSR {
+                            // The card has a BG
+                            // Don't show the BG by default
+                            BgStatus::No
+                        } else {
+                            // The card don't has a BG
+                            BgStatus::None
+                        },
                     })
                     .unwrap(),
                 )]
@@ -177,7 +185,7 @@ pub(crate) async fn respond_step_3(
         let mut pagination_row = vec![];
         if page_id > 1 {
             pagination_row.push(InlineKeyboardButton::callback(
-                "Prev".to_string(),
+                "Prev",
                 serde_json::to_string(&CallbackType::ListIdol {
                     idol_id,
                     page_id: page_id - 1,
@@ -188,7 +196,7 @@ pub(crate) async fn respond_step_3(
 
         let idol_category = find_idol_category(&idol_id)?;
         pagination_row.push(InlineKeyboardButton::callback(
-            "Up".to_string(),
+            "Up",
             serde_json::to_string(&CallbackType::ListIdolCategory {
                 category: idol_category,
                 // allow message reuse
@@ -199,7 +207,7 @@ pub(crate) async fn respond_step_3(
 
         if page_id as usize * PAGE_SIZE < len {
             pagination_row.push(InlineKeyboardButton::callback(
-                "Next".to_string(),
+                "Next",
                 serde_json::to_string(&CallbackType::ListIdol {
                     idol_id,
                     page_id: page_id + 1,
@@ -255,10 +263,26 @@ pub(crate) async fn respond_step_4(
     card_id: u32,
     with_annotation: bool,
     with_plus: bool,
+    bg: BgStatus,
     msgid: MessageIdentifier,
     photo_editable: bool,
 ) -> Result<bool> {
     let card = get_card(card_id).await?;
+
+    let real_bg = match bg {
+        // We don't know if the card has a BG
+        BgStatus::None => {
+            if card.rarity == Rarity::SSR {
+                // The card has a BG
+                // Don't show the BG by default
+                BgStatus::No
+            } else {
+                // The card don't has a BG
+                BgStatus::None
+            }
+        }
+        c => c,
+    };
 
     let mut kbmarkup = InlineKeyboardMarkup::new();
     let mut kbvec = vec![];
@@ -270,24 +294,58 @@ pub(crate) async fn respond_step_4(
             card_id,
             with_annotation,
             with_plus: !with_plus,
+            bg: real_bg,
         })
         .unwrap(),
     ));
 
-    // Annotation / Annotationless
-    kbvec.push(InlineKeyboardButton::callback(
-        "Toggle annotation".to_string(),
-        serde_json::to_string(&CallbackType::IdolCard {
-            card_id,
-            with_annotation: !with_annotation,
-            with_plus,
-        })
-        .unwrap(),
-    ));
+    // SSR: Show toggle_background
+    // Background: Hide toggle_annotation
 
-    kbmarkup.add_row(kbvec);
+    if real_bg != BgStatus::Yes {
+        kbvec.push(InlineKeyboardButton::callback(
+            "Toggle annotation",
+            serde_json::to_string(&CallbackType::IdolCard {
+                card_id,
+                with_annotation: !with_annotation,
+                with_plus,
+                bg: real_bg,
+            })
+            .unwrap(),
+        ));
+    }
 
-    let card_url = get_card_url(&card.resource_id, with_plus, with_annotation);
+    if real_bg != BgStatus::None {
+        kbvec.push(InlineKeyboardButton::callback(
+            "Toggle background",
+            serde_json::to_string(&CallbackType::IdolCard {
+                card_id,
+                with_annotation: !with_annotation,
+                with_plus,
+                bg: if real_bg == BgStatus::Yes {
+                    BgStatus::No
+                } else {
+                    BgStatus::Yes
+                },
+            })
+            .unwrap(),
+        ));
+    }
+
+    if kbvec.len() == 3 {
+        // Split to 2 lines if there is 3 buttons
+        let last = kbvec.pop().unwrap();
+        kbmarkup.add_row(kbvec);
+        kbmarkup.add_row(vec![last]);
+    } else {
+        kbmarkup.add_row(kbvec);
+    }
+
+    let card_url = if real_bg == BgStatus::Yes {
+        get_card_bg_url(&card.resource_id, with_plus)
+    } else {
+        get_card_url(&card.resource_id, with_plus, with_annotation)
+    };
     let caption = Some(format!(
         "{} [{}{}]\n(Use \"/card {}\" to check the card)",
         card.name,

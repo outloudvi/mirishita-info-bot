@@ -2,8 +2,23 @@
 use std::ops::Not;
 
 use serde::{Deserialize, Serialize};
+use serde_repr::{Deserialize_repr, Serialize_repr};
 
 use crate::cmd::list_characters::IdolCategory;
+
+#[derive(Clone, Copy, Hash, PartialEq, Eq, Serialize_repr, Deserialize_repr)]
+#[repr(u8)]
+pub(crate) enum BgStatus {
+    None = 0,
+    No = 1,
+    Yes = 2,
+}
+
+impl BgStatus {
+    fn default() -> Self {
+        BgStatus::None
+    }
+}
 
 /// This is the one used to determine callback.
 /// Callback is limited to 64 bytes so the size should be well controlled.
@@ -41,5 +56,7 @@ pub(crate) enum CallbackType {
         with_annotation: bool,
         #[serde(rename = "p")]
         with_plus: bool,
+        #[serde(rename = "b", default = "BgStatus::default")]
+        bg: BgStatus,
     },
 }
