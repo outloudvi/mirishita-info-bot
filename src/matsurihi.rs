@@ -171,16 +171,24 @@ pub async fn get_event(event_id: u32) -> Result<Event> {
 }
 
 /// Get the metrics for an event by its ID.
-pub async fn get_event_borders(event_id: u32) -> Result<EventBorderView> {
-    let ret = Fetch::Url(Url::parse(&format!(
+pub async fn get_event_borders(event_id: u32) -> Result<Option<EventBorderView>> {
+    let resp = Fetch::Url(Url::parse(&format!(
         "https://api.matsurihi.me/mltd/v1/events/{}/rankings/borderPoints?prettyPrint=false",
         event_id
     ))?)
     .send()
     .await?
-    .json::<EventBorderView>()
+    .text()
     .await?;
-    Ok(ret)
+
+    // An "empty" reply:
+    // [
+    //   {}
+    // ]
+    if resp.starts_with("[") {
+        return Ok(None);
+    }
+    Ok(Some(serde_json::from_str::<EventBorderView>(&resp)?))
 }
 
 /// Get the IDs for all ongoing events.

@@ -17,20 +17,25 @@ pub(crate) async fn send_curr_event_data(with_border: bool, msg: &Message) -> Re
         let event_info = get_event(*curr_event_id).await?;
         let metrics = get_event_borders(*curr_event_id).await?;
         let mut ret = format!("<b>{}</b>\n", event_info.name);
-        let update_time = metrics.event_point.summary_time;
-        let jst = FixedOffset::east(9 * 3600);
-        ret += &format!("Updated: {}\n", update_time.with_timezone(&jst));
-        if with_border {
-            for k in metrics.event_point.scores {
-                if k.score.is_none() {
-                    break;
+        if metrics.is_none() {
+            ret += "No metrics available";
+        } else {
+            let metrics = metrics.unwrap();
+            let update_time = metrics.event_point.summary_time;
+            let jst = FixedOffset::east(9 * 3600);
+            ret += &format!("Updated: {}\n", update_time.with_timezone(&jst));
+            if with_border {
+                for k in metrics.event_point.scores {
+                    if k.score.is_none() {
+                        break;
+                    }
+                    ret += &format!("Rank #{}: {}\n", k.rank, k.score.unwrap().round());
                 }
-                ret += &format!("Rank #{}: {}\n", k.rank, k.score.unwrap().round());
             }
-        }
-        ret += &format!("Participants: {}\n", metrics.event_point.count);
-        if !with_border {
-            ret += "<i>For score borders, use /curr_borders</i>";
+            ret += &format!("Participants: {}\n", metrics.event_point.count);
+            if !with_border {
+                ret += "<i>For score borders, use /curr_borders</i>";
+            }
         }
         ret
     };
