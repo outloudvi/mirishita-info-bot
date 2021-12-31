@@ -138,7 +138,7 @@ pub struct Event {
 
 impl Display for Event {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "**{}**", self.name)?;
+        writeln!(f, "<b>{}</b>", self.name)?;
         writeln!(f, "Starts: {}", self.schedule.begin_date)?;
         writeln!(f, "Ends: {}", self.schedule.end_date)?;
         Ok(())

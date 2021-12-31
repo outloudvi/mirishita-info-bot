@@ -16,6 +16,7 @@ pub(crate) async fn handler(_: &str, msg: &Message) -> Result<bool> {
 
     let mut reply_msg = SendMessage::new(&msg.chat, text);
     reply_msg.reply_to(msg);
+    reply_msg.parse_mode(telegram_bot_raw::ParseMode::Html);
     let reply_msg = serde_json::to_string(&reply_msg)?;
     respond_raw("sendMessage", &reply_msg).await?;
     Ok(true)
