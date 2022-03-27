@@ -1,3 +1,14 @@
+//! ## /last_borders
+//!
+//! This command is used to display the score metrics for current event.
+//!
+//! This command (and [`/last_event`](super::last_event)) accepts the following
+//! types of inputs:
+//! * `/last_borders` - Borders for last event
+//! * `/last_borders -1` - Borders for last event (== `/last_borders`)
+//! * `/last_borders 0` - Borders for current event (if any)
+//! * `/last_borders 3` - Borders for event #3
+//! * `/last_borders -2` - Borders for the previous of last event
 use chrono::FixedOffset;
 use telegram_bot_raw::{Message, SendMessage};
 use worker::Result;
@@ -102,9 +113,6 @@ pub(crate) async fn last_something(
     send_event_data(with_border, event_id, msg).await
 }
 
-/// ## /last_borders
-///
-/// This command is used to display the score metrics for current event.
 pub(crate) async fn handler(command: &str, msg: &Message) -> Result<bool> {
     last_something(command, msg, true).await
 }

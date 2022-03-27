@@ -1,3 +1,12 @@
+//! ## /card
+//!
+//! This command is used to display a card.
+//!
+//! This command has the following signatures in matching preference:
+//! * `/card` - A random card
+//! * `/card [id:int]` - A card of id [id]
+//! * `/card [idol:str]` - A random card from [idol]
+//! * `/card [cardAssetId:str]` - A card of assetId [cardAssetId]
 use telegram_bot_raw::Message;
 use worker::Result;
 
@@ -8,15 +17,6 @@ use crate::matsurihi::get_card_url;
 use crate::telegram::respond_img;
 use crate::types::MessageIdentifier;
 
-/// ## /card
-///
-/// This command is used to display a card.
-///
-/// This command has the following signatures in matching preference:
-/// * /card - A random card
-/// * /card [id:int] - A card of id [id]
-/// * /card [idol:str] - A random card from [idol]
-/// * /card [cardAssetId:str] - A card of assetId [cardAssetId]
 pub(crate) async fn handler(command: &str, msg: &Message) -> Result<bool> {
     let splits = command.trim().split(' ').collect::<Vec<_>>();
     if splits.len() != 2 {

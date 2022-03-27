@@ -1,3 +1,8 @@
+//! ## /list_characters
+//!
+//! This command lists all characters for card lookup.
+//!
+//! This command has an interactive interface for Telegram.
 use std::collections::HashMap;
 
 use lazy_static::lazy_static;
@@ -58,9 +63,6 @@ fn find_idol_category(idol_id: &u32) -> Result<IdolCategory> {
     Err(worker::Error::RustError("Idol not found".to_string()))
 }
 
-/// ## /list_characters
-///
-/// This command lists all characters for card lookup.
 pub(crate) async fn handler(_: &str, msg: &Message) -> Result<bool> {
     let mut kbmarkup = InlineKeyboardMarkup::new();
     for i in [
