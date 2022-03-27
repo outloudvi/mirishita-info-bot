@@ -16,3 +16,4 @@ add_command!(curr_borders);
 add_command!(curr_event);
 add_command!(last_event);
 add_command!(list_characters);
+add_command!(last_borders);

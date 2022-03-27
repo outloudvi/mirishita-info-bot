@@ -70,6 +70,12 @@ pub(crate) async fn handler_text(data: &str, msg: &Message) -> Result<()> {
             respond_text("Bad command usage", &msg.chat).await?;
         }
         Ok(())
+    } else if data.starts_with("/last_borders") {
+        let ret = cmd::handler__last_borders(data, msg).await?;
+        if !ret {
+            respond_text("Bad command usage", &msg.chat).await?;
+        }
+        Ok(())
     } else if data.starts_with("/curr_borders") {
         let ret = cmd::handler__curr_borders(data, msg).await?;
         if !ret {
