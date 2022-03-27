@@ -1,6 +1,6 @@
 //! Various handlers.
 
-use telegram_bot_raw::Message;
+use telegram_bot_raw::{Message, MessageChat};
 use worker::Result;
 
 use crate::callback_types::CallbackType;
@@ -95,7 +95,9 @@ pub(crate) async fn handler_text(data: &str, msg: &Message) -> Result<()> {
         }
         Ok(())
     } else {
-        respond_text(&format!("Command not found: {}", data), &msg.chat).await?;
+        if matches!(msg.chat, MessageChat::Private(_)) {
+            respond_text(&format!("Command not found: {}", data), &msg.chat).await?;
+        }
         Ok(())
     }
 }
