@@ -2,7 +2,7 @@ use chrono::FixedOffset;
 use telegram_bot_raw::{Message, SendMessage};
 use worker::Result;
 
-use crate::matsurihi::{get_current_event_ids, get_event, get_event_borders};
+use crate::matsurihi::{get_current_event_ids, get_event, get_event_borders, get_events};
 use crate::telegram::respond_raw;
 
 /// Send event data.
@@ -17,13 +17,23 @@ pub(crate) async fn send_event_data(
 ) -> Result<bool> {
     let maybe_event_id = match original_event_id {
         i if i > 0 => Some(i as u32),
-        i => {
+        i => 'blk: {
             let mut curr_event_ids = get_current_event_ids().await?;
             curr_event_ids.sort_unstable();
-            match curr_event_ids.last() {
-                Some(curr) => Some((*curr as i32 + i) as u32),
-                None => None,
+            if curr_event_ids.last().is_some() {
+                break 'blk Some((*curr_event_ids.last().unwrap() as i32 + i) as u32);
             }
+            if i == 0 {
+                // No current event
+                break 'blk None;
+            }
+            let events = get_events().await?;
+            let last_event_id = events
+                .into_iter()
+                .map(|ev| ev.id)
+                .reduce(|a, b| a.max(b))
+                .unwrap_or(0);
+            Some(((last_event_id as i32) + 1 + i) as u32)
         }
     };
 
