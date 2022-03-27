@@ -45,7 +45,7 @@ pub(crate) async fn send_event_data(
         match maybe_event_info {
             Ok(event_info) => {
                 let metrics = get_event_borders(event_id).await?;
-                let mut ret = format!("<b>{}</b>\n", event_info.name);
+                let mut ret = format!("<b>{}</b> (#{})\n", event_info.name, event_info.id);
                 if metrics.is_none() {
                     ret += "No metrics available";
                 } else {
