@@ -64,7 +64,7 @@ pub(crate) async fn send_event_data(
                     ret += &format!("Participants: {}\n", metrics.event_point.count);
                     if !with_border {
                         ret += &format!(
-                            "<i>For score borders, use /{}</i>",
+                            "<i>For score borders, use {}</i>",
                             if original_event_id == 0 {
                                 "/curr_borders".to_owned()
                             } else {
