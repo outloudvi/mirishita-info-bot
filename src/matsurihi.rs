@@ -127,7 +127,7 @@ pub struct EventSchedule {
 
 #[derive(Deserialize)]
 pub struct Event {
-    id: u32,
+    pub id: u32,
     pub name: String,
     /// See `EVENT_TYPE_MAP` in constants for the mapping relationships.
     #[serde(rename = "type")]
