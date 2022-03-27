@@ -97,7 +97,11 @@ async fn handle_callback(cb_raw: telegram_bot_raw::CallbackQuery) -> Result<()> 
 
 /// The entrypoint to the script.
 #[event(fetch)]
-pub async fn main(req: WRequest, env: worker::Env) -> worker::Result<worker::Response> {
+pub async fn main(
+    req: WRequest,
+    env: worker::Env,
+    _ctx: worker::Context,
+) -> worker::Result<worker::Response> {
     use worker::*;
 
     utils::set_panic_hook();

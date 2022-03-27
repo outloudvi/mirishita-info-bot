@@ -21,7 +21,7 @@ serde_repr = "0.1.7"
 strum = "0.23"
 strum_macros = "0.23"
 telegram-bot-raw = "0.8.0"
-worker = "0.0.7"
+worker = "0.0.9"
 # The `console_error_panic_hook` crate provides better debugging of panics by
 # logging them with `console.error`. This is great for development, but requires
 # all the `std::fmt` and `std::panicking` infrastructure, so isn't great for
