@@ -41,37 +41,42 @@ pub(crate) async fn send_event_data(
         "No current event!".to_string()
     } else {
         let event_id = maybe_event_id.unwrap();
-        let event_info = get_event(event_id).await?;
-        let metrics = get_event_borders(event_id).await?;
-        let mut ret = format!("<b>{}</b>\n", event_info.name);
-        if metrics.is_none() {
-            ret += "No metrics available";
-        } else {
-            let metrics = metrics.unwrap();
-            let update_time = metrics.event_point.summary_time;
-            let jst = FixedOffset::east(9 * 3600);
-            ret += &format!("Updated: {}\n", update_time.with_timezone(&jst));
-            if with_border {
-                for k in metrics.event_point.scores {
-                    if k.score.is_none() {
-                        break;
+        let maybe_event_info = get_event(event_id).await;
+        match maybe_event_info {
+            Ok(event_info) => {
+                let metrics = get_event_borders(event_id).await?;
+                let mut ret = format!("<b>{}</b>\n", event_info.name);
+                if metrics.is_none() {
+                    ret += "No metrics available";
+                } else {
+                    let metrics = metrics.unwrap();
+                    let update_time = metrics.event_point.summary_time;
+                    let jst = FixedOffset::east(9 * 3600);
+                    ret += &format!("Updated: {}\n", update_time.with_timezone(&jst));
+                    if with_border {
+                        for k in metrics.event_point.scores {
+                            if k.score.is_none() {
+                                break;
+                            }
+                            ret += &format!("Rank #{}: {}\n", k.rank, k.score.unwrap().round());
+                        }
                     }
-                    ret += &format!("Rank #{}: {}\n", k.rank, k.score.unwrap().round());
+                    ret += &format!("Participants: {}\n", metrics.event_point.count);
+                    if !with_border {
+                        ret += &format!(
+                            "<i>For score borders, use /{}</i>",
+                            if original_event_id == 0 {
+                                "/curr_borders".to_owned()
+                            } else {
+                                format!("/last_borders {}", event_id)
+                            }
+                        );
+                    }
                 }
+                ret
             }
-            ret += &format!("Participants: {}\n", metrics.event_point.count);
-            if !with_border {
-                ret += &format!(
-                    "<i>For score borders, use /{}</i>",
-                    if original_event_id == 0 {
-                        "/curr_borders".to_owned()
-                    } else {
-                        format!("/last_borders {}", event_id)
-                    }
-                );
-            }
+            Err(_) => "Event not found!".to_string(),
         }
-        ret
     };
     let mut reply_msg = SendMessage::new(&msg.chat, text);
     reply_msg.parse_mode(telegram_bot_raw::ParseMode::Html);
@@ -81,9 +86,25 @@ pub(crate) async fn send_event_data(
     Ok(true)
 }
 
+pub(crate) async fn last_something(
+    command: &str,
+    msg: &Message,
+    with_border: bool,
+) -> Result<bool> {
+    let splits = command.trim().split(' ').collect::<Vec<_>>();
+    let event_id = match splits.get(1) {
+        Some(x) => match x.parse::<i32>() {
+            Ok(v) => v,
+            Err(_) => -1,
+        },
+        None => -1,
+    };
+    send_event_data(with_border, event_id, msg).await
+}
+
 /// ## /last_borders
 ///
 /// This command is used to display the score metrics for current event.
-pub(crate) async fn handler(_: &str, msg: &Message) -> Result<bool> {
-    send_event_data(true, -1, msg).await
+pub(crate) async fn handler(command: &str, msg: &Message) -> Result<bool> {
+    last_something(command, msg, true).await
 }

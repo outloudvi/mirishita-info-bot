@@ -12,6 +12,8 @@
 //!
 //! For bot command documentaion, see [`cmd`].
 
+#![feature(label_break_value)]
+
 use telegram::respond_callback_query;
 use telegram_bot_raw::Update;
 use worker::{
