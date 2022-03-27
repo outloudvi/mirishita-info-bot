@@ -10,7 +10,7 @@ A Mirishita (ミリシタ) information bot based on [Princess by matsurihi.me](h
 
 This can be seen as a sample project to write Telegram bots with [`worker-rs`](https://github.com/cloudflare/workers-rs/tree/HEAD/worker) over Cloudflare Workers. However, it should be stressed that `worker-rs` is **NOT** yet production ready:
 
-* [Lack of scheduled events](https://github.com/cloudflare/workers-rs/issues/53)
+* ~~[Lack of scheduled events](https://github.com/cloudflare/workers-rs/issues/53)~~
 * [Cannot send requests with FormData](https://github.com/cloudflare/workers-rs/issues/79)
 
 ## License
